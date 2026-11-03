@@ -1,7 +1,6 @@
 package test;
 
 import main.BankAccount;
-import main.BankAccount.Transaction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -9,6 +8,7 @@ import static org.junit.Assert.fail;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -34,58 +34,88 @@ public class BankAccountTest {
     }
 
     @Test
-    void newAccountHasEmptyHistory() {
-        BankAccount account = new BankAccount();
-        List<Transaction> history = account.getTransactionHistory();
+    void transferMovesMoneyBetweenAccounts() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
 
-        assertNotNull(history);
-        assertTrue(history.isEmpty());
+        account1.deposit(100);
+
+        account1.transfer(account2, 40);
+
+        assertEquals(60, account1.getBalance(), 0.0001);
+        assertEquals(40, account2.getBalance(), 0.0001);
     }
 
     @Test
-    void depositIsRecordedInHistory() {
-        BankAccount account = new BankAccount();
-        account.deposit(100);
+    void transferOfFullBalanceLeavesAccountEmpty() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
 
-        List<Transaction> history = account.getTransactionHistory();
-        Transaction transaction = history.get(0);
+        account1.deposit(100);
 
-        assertEquals(1, history.size());
-        assertEquals(100, transaction.getAmount(), 0.0001);
+        account1.transfer(account2, 100);
+
+        assertEquals(0, account1.getBalance(), 0.0001);
+        assertEquals(100, account2.getBalance(), 0.0001);
     }
 
     @Test
-    void decimalAmountsArePreservedInHistory() {
-        BankAccount account = new BankAccount();
-        account.deposit(12.34);
+    void transferDoesNotChangeTotalMoney() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
 
-        List<Transaction> history = account.getTransactionHistory();
-        Transaction transaction = history.get(0);
+        account1.deposit(100);
+        account2.deposit(50);
 
-        assertEquals(12.34, transaction.getAmount(), 0.0001);
+        account1.transfer(account2, 30);
+
+        double totalBalance = account1.getBalance() + account2.getBalance();
+
+        assertEquals(150, totalBalance, 0.0001);
     }
 
     @Test
-    void repeatedIdenticalDepositsAreEachRecordedInHistory() {
-        BankAccount account = new BankAccount();
-        account.deposit(10);
-        account.deposit(10);
-        account.deposit(10);
+    void transferMoreThanBalanceIsRejected() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
 
-        List<Transaction> history = account.getTransactionHistory();
+        account1.deposit(50);
 
-        assertEquals(3, history.size());
+        assertThrows(IllegalArgumentException.class, () -> {
+            account1.transfer(account2, 100);
+        });
+
+        assertEquals(50, account1.getBalance(), 0.0001);
+        assertEquals(0, account2.getBalance(), 0.0001);
     }
 
     @Test
-    void largeNumberOfDepositsAreAllRecordedInHistory() {
-        BankAccount account = new BankAccount();
+    void transferOfNegativeAmountIsRejected() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
 
-        for (int i = 0; i < 100; i++) {
-            account.deposit(1);
-        }
+        account1.deposit(100);
 
-        List<Transaction> history = account.getTransactionHistory();
-        assertEquals(100, history.size());
+        assertThrows(IllegalArgumentException.class, () -> {
+            account1.transfer(account2, -20);
+        });
+
+        assertEquals(100, account1.getBalance(), 0.0001);
+        assertEquals(0, account2.getBalance(), 0.0001);
+    }
+
+    @Test
+    void transferOfZeroIsRejected() {
+        BankAccount account1 = new BankAccount();
+        BankAccount account2 = new BankAccount();
+
+        account1.deposit(100);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            account1.transfer(account2, 0);
+        });
+
+        assertEquals(100, account1.getBalance(), 0.0001);
+        assertEquals(0, account2.getBalance(), 0.0001);
     }
 }
