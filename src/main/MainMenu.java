@@ -4,8 +4,8 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 2;
-	private static final int MAX_SELECTION = 2;
+    private static final int EXIT_SELECTION = 4;
+	private static final int MAX_SELECTION = 4;
 
 	private BankAccount userAccount;
     private Scanner keyboardInput;
@@ -17,10 +17,10 @@ public class MainMenu {
 
     public void displayOptions() {
         System.out.println("Welcome to the 237 Bank App!");
-        
         System.out.println("1. Make a deposit");
-        System.out.println("2. Exit the app");
-
+        System.out.println("2. Check account balance");
+        System.out.println("3. Add interest payment (Administrator)");
+        System.out.println("4. Exit the app");
     }
 
     public int getUserSelection(int max) {
@@ -36,6 +36,40 @@ public class MainMenu {
         switch (selection) {
             case 1:
                 performDeposit();
+                break;
+            case 2:
+                displayBalance();
+                break;
+            case 3:
+                performAddInterest();
+                break;
+            case 4:
+                System.out.println("Thank you for using the 237 Bank App!");
+                break;
+            default:
+                System.out.println("Invalid selection. Please try again.");
+                break;
+        }
+    }
+    public void displayBalance() {
+        System.out.printf("Your current balance is: $%.2f%n", userAccount.getBalance());
+    }
+
+    public void performAddInterest() {
+        System.out.print("Please enter the interest rate (as a percentage): ");
+
+        try {
+            double interestRate = Double.parseDouble(keyboardInput.next());
+
+            userAccount.addInterest(interestRate);
+
+            System.out.printf("Interest added. New balance is: $%.2f%n",userAccount.getBalance());
+        } 
+        catch (NumberFormatException e) {
+            System.out.println("Invalid interest rate. Please enter a number.");
+        } 
+        catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
@@ -43,7 +77,7 @@ public class MainMenu {
         double depositAmount = -1;
         while(depositAmount < 0) {
             System.out.print("How much would you like to deposit: ");
-            depositAmount = keyboardInput.nextInt();
+            depositAmount = keyboardInput.nextDouble();
         }
         userAccount.deposit(depositAmount);
     }
