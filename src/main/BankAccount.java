@@ -21,6 +21,16 @@ public class BankAccount {
             throw new IllegalArgumentException();
         }
     }
+    
+    public void withdraw(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Withdrawal amount must be positive");
+        }
+        if (amount > this.balance) {
+            throw new IllegalArgumentException("Insufficient funds");
+        }
+        this.balance -= amount;
+    }
 
     public void addInterest(double interestRate) {
         if (!Double.isFinite(interestRate) || interestRate < 0) {

@@ -5,8 +5,8 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 7;
-    private static final int MAX_SELECTION = 7;
+    private static final int EXIT_SELECTION = 8;
+    private static final int MAX_SELECTION = 8;
 
     private BankAccount userAccount;
     private BankAccount otherAccount;
@@ -26,7 +26,8 @@ public class MainMenu {
         System.out.println("2. View transaction history");
         System.out.println("3. Collect a fee (admin)");
         System.out.println("6. Add interest payment (Administrator)");
-        System.out.println("7. Exit the app");
+        System.out.println("7. Make a withdrawal");
+        System.out.println("8. Exit the app");
 
     }
 
@@ -70,6 +71,9 @@ public class MainMenu {
           case 6:
                  performAddInterest();
                  break;
+          case 7:
+                performWithdraw();
+                break;
           default:
                 System.out.println("Invalid selection. Please try again.");
         }
@@ -119,6 +123,17 @@ public class MainMenu {
             System.out.println("Collected $" + feeAmount + " fee. New balance: $" + userAccount.getBalance());
         } catch (IllegalArgumentException e) {
             System.out.println("Fee collection failed: " + e.getMessage());
+        }
+    }
+
+    public void performWithdraw() {
+        System.out.print("How much would you like to withdraw: ");
+        double withdrawAmount = keyboardInput.nextDouble();
+        try {
+            userAccount.withdraw(withdrawAmount);
+            System.out.println("Withdrew $" + withdrawAmount + ". New balance: $" + userAccount.getBalance());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Withdrawal failed: " + e.getMessage());
         }
     }
 

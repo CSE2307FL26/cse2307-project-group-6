@@ -231,6 +231,60 @@ public class BankAccountTest {
             //do nothing, test passes
         }
     }
+
+    @Test
+    public void testWithdraw() {
+        BankAccount testAccount = new BankAccount();
+        testAccount.deposit(100);
+        testAccount.withdraw(40);
+        assertEquals(60, testAccount.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testWithdrawEntireBalance() {
+        BankAccount testAccount = new BankAccount();
+        testAccount.deposit(50);
+        testAccount.withdraw(50);
+        assertEquals(0, testAccount.getBalance(), 0.01);
+    }
+
+     @Test
+    public void testInvalidWithdrawNegative() {
+        BankAccount testAccount = new BankAccount();
+        testAccount.deposit(100);
+        try {
+            testAccount.withdraw(-50);
+            fail();
+        } catch (IllegalArgumentException e) {
+            //do nothing, test passes
+        }
+    }
+
+     @Test
+    public void testInvalidWithdrawZero() {
+        BankAccount testAccount = new BankAccount();
+        testAccount.deposit(100);
+        try {
+            testAccount.withdraw(0);
+            fail();
+        } catch (IllegalArgumentException e) {
+            //do nothing, test passes
+        }
+    }
+
+     @Test
+    public void testWithdrawInsufficientFunds() {
+        BankAccount testAccount = new BankAccount();
+        testAccount.deposit(30);
+        try {
+            testAccount.withdraw(100);
+            fail();
+        } catch (IllegalArgumentException e) {
+            //balance should stay the same
+            assertEquals(30, testAccount.getBalance(), 0.01);
+        }
+    }
+
     @Test
     public void testAddInterest() {
         BankAccount account = new BankAccount();
