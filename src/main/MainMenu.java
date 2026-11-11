@@ -1,13 +1,14 @@
 package main;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 3;
-	private static final int MAX_SELECTION = 3;
+    private static final int EXIT_SELECTION = 4;
+	  private static final int MAX_SELECTION = 4;
 
-	private BankAccount userAccount;
+    private BankAccount userAccount;
     private Scanner keyboardInput;
 
     public MainMenu() {
@@ -17,10 +18,11 @@ public class MainMenu {
 
     public void displayOptions() {
         System.out.println("Welcome to the 237 Bank App!");
-        
+
         System.out.println("1. Make a deposit");
-        System.out.println("2. Collect a fee (admin)");
-        System.out.println("3. Exit the app");
+        System.out.println("2. View transaction history");
+        System.out.println("3. Collect a fee (admin)");
+        System.out.println("4. Exit the app");
 
     }
 
@@ -39,6 +41,8 @@ public class MainMenu {
                 performDeposit();
                 break;
             case 2:
+                viewTransactionHistory();
+            case 3
                 performCollectFee();
                 break;
         }
@@ -51,6 +55,18 @@ public class MainMenu {
             depositAmount = keyboardInput.nextInt();
         }
         userAccount.deposit(depositAmount);
+    }
+
+    public void viewTransactionHistory() {
+        List<BankAccount.Transaction> history = userAccount.getTransactionHistory();
+        if (history.isEmpty()) {
+            System.out.println("No transactions yet.");
+            return;
+        }
+        System.out.println("Transaction history:");
+        for (int i = 0; i < history.size(); i++) {
+            System.out.printf("%d. Deposit: $%.2f%n", i + 1, history.get(i).getAmount());
+        }
     }
 
     public void performCollectFee() {
