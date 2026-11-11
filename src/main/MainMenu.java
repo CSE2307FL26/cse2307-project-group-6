@@ -5,8 +5,8 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 5;
-    private static final int MAX_SELECTION = 5;
+    private static final int EXIT_SELECTION = 6;
+    private static final int MAX_SELECTION = 6;
 
     private BankAccount userAccount;
     private BankAccount otherAccount;
@@ -20,22 +20,33 @@ public class MainMenu {
 
     public void displayOptions() {
         System.out.println("Welcome to the 237 Bank App!");
-
         System.out.println("1. Make a deposit");
+        System.out.println("5. Check account balance");
         System.out.println("4. Transfer to another account");
         System.out.println("2. View transaction history");
         System.out.println("3. Collect a fee (admin)");
-        System.out.println("5. Exit the app");
+        System.out.println("6. Exit the app");
 
     }
 
     public int getUserSelection(int max) {
-        int selection = -1;
-        while(selection < 1 || selection > max) {
-            System.out.print("Please make a selection: ");
-            selection = keyboardInput.nextInt();
+    int selection = -1;
+
+    while (selection < 1 || selection > max) {
+        System.out.print("Please make a selection: ");
+        selection = keyboardInput.nextInt();
+
+        if (selection < 1 || selection > max) {
+            System.out.println("Invalid selection. Please try again.");
         }
-        return selection;
+    }
+
+    return selection;
+    }
+
+
+    public void displayBalance() {
+        System.out.printf("Current account balance: $%.2f%n", userAccount.getBalance());
     }
 
     public void processInput(int selection) {
@@ -52,6 +63,11 @@ public class MainMenu {
           case 4:
                 performTransfer();
                 break;
+          case 5:
+                displayBalance();
+                break;
+          default:
+                System.out.println("Invalid selection. Please try again.");
         }
     }
 

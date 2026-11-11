@@ -204,6 +204,21 @@ public class BankAccountTest {
         }
     }
 
+    @Test
+    public void testInitialBalance() {
+        BankAccount account = new BankAccount();
+        assertEquals(0, account.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testBalanceAfterDeposits() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.deposit(50);
+        assertEquals(150, account.getBalance(), 0.01);
+    }
+
+
         @Test
         void testInvalidFeeZero() {
         BankAccount testAccount = new BankAccount();
