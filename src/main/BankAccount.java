@@ -16,6 +16,16 @@ public class BankAccount {
         }
     }
 
+    public void collectFee(double fee) {
+        if (fee <= 0) {
+            throw new IllegalArgumentException("Fee must be positive");
+        }
+        if (fee > this.balance) {
+            throw new IllegalArgumentException("Insufficient funds to collect fee");
+        }
+        this.balance -= fee;
+    }
+
     public double getBalance() {
         return this.balance;
     }
