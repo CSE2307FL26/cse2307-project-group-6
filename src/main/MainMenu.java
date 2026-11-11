@@ -1,47 +1,53 @@
 package main;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 4;
-	private static final int MAX_SELECTION = 4;
+    private static final int EXIT_SELECTION = 7;
+    private static final int MAX_SELECTION = 7;
 
-	private BankAccount userAccount;
+    private BankAccount userAccount;
+    private BankAccount otherAccount;
     private Scanner keyboardInput;
 
     public MainMenu() {
         this.userAccount = new BankAccount();
+        this.otherAccount = new BankAccount();
         this.keyboardInput = new Scanner(System.in);
     }
 
     public void displayOptions() {
         System.out.println("Welcome to the 237 Bank App!");
         System.out.println("1. Make a deposit");
-        System.out.println("2. Check account balance");
-        System.out.println("3. Add interest payment (Administrator)");
-        System.out.println("4. Exit the app");
+        System.out.println("5. Check account balance");
+        System.out.println("4. Transfer to another account");
+        System.out.println("2. View transaction history");
+        System.out.println("3. Collect a fee (admin)");
+        System.out.println("6. Add interest payment (Administrator)");
+        System.out.println("7. Exit the app");
+
     }
 
     public int getUserSelection(int max) {
-        while (true) {
-            System.out.print("Please make a selection: ");
+    int selection = -1;
 
-            String input = keyboardInput.nextLine().trim();
+    while (selection < 1 || selection > max) {
+        System.out.print("Please make a selection: ");
+        selection = keyboardInput.nextInt();
 
-            try {
-                int selection = Integer.parseInt(input);
-
-                if (selection >= 1 && selection <= max) {
-                    return selection;
-                }
-
-                System.out.println("Invalid selection. Please try again.");
-
-            } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
-            }
+        if (selection < 1 || selection > max) {
+            System.out.println("Invalid selection. Please try again.");
         }
+    }
+
+    return selection;
+    }
+
+
+    public void displayBalance() {
+        System.out.printf("Current account balance: $%.2f%n", userAccount.getBalance());
     }
 
     public void processInput(int selection) {
@@ -49,57 +55,70 @@ public class MainMenu {
             case 1:
                 performDeposit();
                 break;
-            case 2:
+          case 2:
+                viewTransactionHistory();
+                break;
+          case 3:
+                performCollectFee();
+                break;
+          case 4:
+                performTransfer();
+                break;
+          case 5:
                 displayBalance();
                 break;
-            case 3:
-                performAddInterest();
-                break;
-            case 4:
-                System.out.println("Thank you for using the 237 Bank App!");
-                break;
-            default:
+          case 6:
+                 performAddInterest();
+                 break;
+          default:
                 System.out.println("Invalid selection. Please try again.");
-                break;
-        }
-    }
-    public void displayBalance() {
-        System.out.printf("Your current balance is: $%.2f%n", userAccount.getBalance());
-    }
-
-    public void performAddInterest() {
-        System.out.print("Please enter the interest rate (as a percentage): ");
-
-        try {
-            double interestRate = Double.parseDouble(keyboardInput.nextLine().trim());
-
-            userAccount.addInterest(interestRate);
-
-            System.out.printf("Interest added. New balance is: $%.2f%n",userAccount.getBalance());
-        } 
-        catch (NumberFormatException e) {
-            System.out.println("Invalid interest rate. Please enter a number.");
-        } 
-        catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
         }
     }
 
     public void performDeposit() {
-        System.out.print("Please enter the amount to deposit: ");
+        double depositAmount = -1;
+        while(depositAmount <= 0) {
+            System.out.print("How much would you like to deposit: ");
+            depositAmount = keyboardInput.nextDouble();
+        }
+    }
 
+    public void performTransfer() {
+        double transferAmount = -1;
+        while(transferAmount <= 0) {
+            System.out.print("How much would you like to transfer: ");
+            transferAmount = keyboardInput.nextDouble();
+        }
         try {
-            double amount = Double.parseDouble(keyboardInput.next());
+            userAccount.transfer(otherAccount, transferAmount);
+            System.out.println("Transfer complete.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Transfer failed: insufficient funds.");
+        }
+        System.out.println("Your balance: " + userAccount.getBalance());
+        System.out.println("Other account balance: " + otherAccount.getBalance());
+    }
+      
+      public void viewTransactionHistory() {
+        List<BankAccount.Transaction> history = userAccount.getTransactionHistory();
+        if (history.isEmpty()) {
+            System.out.println("No transactions yet.");
+            return;
+        }
+        System.out.println("Transaction history:");
+        for (int i = 0; i < history.size(); i++) {
+            System.out.printf("%d. Deposit: $%.2f%n", i + 1, history.get(i).getAmount());
+        }
+    }
 
-            userAccount.deposit(amount);
-
-            System.out.printf("Deposit successful. New balance is: $%.2f%n",userAccount.getBalance());
-        } 
-        catch (NumberFormatException e) {
-            System.out.println("Invalid amount. Please enter a number.");
-        } 
-        catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
+    public void performCollectFee() {
+        System.out.print("Enter fee amount to collect: ");
+        double feeAmount = keyboardInput.nextDouble();
+        try {
+            userAccount.collectFee(feeAmount);
+            System.out.println("Collected $" + feeAmount + " fee. New balance: $" + userAccount.getBalance());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Fee collection failed: " + e.getMessage());
         }
     }
 
@@ -116,5 +135,6 @@ public class MainMenu {
         MainMenu bankApp = new MainMenu();
         bankApp.run();
     }
+
 
 }
