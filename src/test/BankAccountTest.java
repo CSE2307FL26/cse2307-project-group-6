@@ -119,7 +119,6 @@ public class BankAccountTest {
 
         assertEquals(100, account1.getBalance(), 0.0001);
         assertEquals(0, account2.getBalance(), 0.0001);
-        }
     }
 
     @Test
