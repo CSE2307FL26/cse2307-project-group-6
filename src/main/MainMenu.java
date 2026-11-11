@@ -24,12 +24,24 @@ public class MainMenu {
     }
 
     public int getUserSelection(int max) {
-        int selection = -1;
-        while(selection < 1 || selection > max) {
+        while (true) {
             System.out.print("Please make a selection: ");
-            selection = keyboardInput.nextInt();
+
+            String input = keyboardInput.nextLine().trim();
+
+            try {
+                int selection = Integer.parseInt(input);
+
+                if (selection >= 1 && selection <= max) {
+                    return selection;
+                }
+
+                System.out.println("Invalid selection. Please try again.");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
+            }
         }
-        return selection;
     }
 
     public void processInput(int selection) {
@@ -59,7 +71,7 @@ public class MainMenu {
         System.out.print("Please enter the interest rate (as a percentage): ");
 
         try {
-            double interestRate = Double.parseDouble(keyboardInput.next());
+            double interestRate = Double.parseDouble(keyboardInput.nextLine().trim());
 
             userAccount.addInterest(interestRate);
 
@@ -74,12 +86,21 @@ public class MainMenu {
     }
 
     public void performDeposit() {
-        double depositAmount = -1;
-        while(depositAmount < 0) {
-            System.out.print("How much would you like to deposit: ");
-            depositAmount = keyboardInput.nextDouble();
+        System.out.print("Please enter the amount to deposit: ");
+
+        try {
+            double amount = Double.parseDouble(keyboardInput.next());
+
+            userAccount.deposit(amount);
+
+            System.out.printf("Deposit successful. New balance is: $%.2f%n",userAccount.getBalance());
+        } 
+        catch (NumberFormatException e) {
+            System.out.println("Invalid amount. Please enter a number.");
+        } 
+        catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
         }
-        userAccount.deposit(depositAmount);
     }
 
     public void run() {
