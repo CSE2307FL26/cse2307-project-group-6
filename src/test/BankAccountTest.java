@@ -75,4 +75,14 @@ public class BankAccountTest {
 
         assertEquals(1000, account.getBalance(), 0.01);
     }
+    @Test
+    public void testInterestPaymentOverflow() {
+        BankAccount account = new BankAccount();
+
+        account.deposit(Double.MAX_VALUE);
+
+        assertThrows(IllegalArgumentException.class,() -> account.addInterest(100));
+
+        assertEquals(Double.MAX_VALUE, account.getBalance(), 0.0);
+    }
 }   
