@@ -4,21 +4,15 @@ import java.util.List;
 import java.util.Scanner;
 
 public class MainMenu {
-    
-   
-    private static final int EXIT_SELECTION = 10;
-    private static final int MAX_SELECTION = 10;
+
+    private static final int EXIT_SELECTION = 8;
+    private static final int MAX_SELECTION = 8;
 
     private BankAccount userAccount;
     private BankAccount otherAccount;
     private Scanner keyboardInput;
-    private Customer customer;
-    
-  
-  
+
     public MainMenu() {
-        this.customer = new Customer();
-        this.userAccount = customer.getAccounts().get(0);
         this.userAccount = new BankAccount();
         this.otherAccount = new BankAccount();
         this.keyboardInput = new Scanner(System.in);
@@ -33,9 +27,7 @@ public class MainMenu {
         System.out.println("3. Collect a fee (admin)");
         System.out.println("6. Add interest payment (Administrator)");
         System.out.println("7. Make a withdrawal");
-        System.out.println("8. Open a new account");
-        System.out.println("9. Close an account");
-        System.out.println("10. Exit the app");
+        System.out.println("8. Exit the app");
 
     }
 
@@ -82,24 +74,10 @@ public class MainMenu {
           case 7:
                 performWithdraw();
                 break;
-          case 8:
-              openNewAccount();
-              break;
-          case 9:
-              closeExistingAccount();
-              break;
           default:
                 System.out.println("Invalid selection. Please try again.");
         }
-        for (int i = 0; i < customer.getNumberOfAccounts(); i++) {
-            System.out.printf("%d. Account %d - Balance: $%.2f%n", i + 1, i + 1, customer.getAccounts().get(i).getBalance());
-        }
-        int choice = getUserSelection(customer.getNumberOfAccounts());
-        double payout = customer.closeAccount(choice - 1);
-        userAccount = customer.getAccounts().get(0);
-        System.out.printf("Account closed. $%.2f has been paid out to you.%n", payout);
     }
-
 
     public void performDeposit() {
         double depositAmount = -1;
