@@ -18,7 +18,16 @@ public class Customer {
         this.accounts.add(newAccount);
         return newAccount;
     }
-
+    public double closeAccount(int index) {
+        if (index < 0 || index >= this.accounts.size()) {
+            throw new IllegalArgumentException("Account does not exist");
+        }
+        if (this.accounts.size() == 1) {
+            throw new IllegalStateException("Cannot close your only account");
+        }
+        BankAccount closedAccount = this.accounts.remove(index);
+        return closedAccount.getBalance();
+    }
     public List<BankAccount> getAccounts() {
         return Collections.unmodifiableList(this.accounts);
     }

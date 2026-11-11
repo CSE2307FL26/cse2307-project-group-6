@@ -3,6 +3,8 @@ package test;
 import main.BankAccount;
 import main.Customer;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,5 +42,37 @@ public class CustomerTest {
         assertNotSame(first, second);
         assertEquals(0, second.getBalance(), 0.01);
         assertTrue(customer.getAccounts().contains(second));
+    }
+
+    @Test
+    public void testCloseAccountRemovesAccount() {
+        Customer customer = new Customer();
+        BankAccount second = customer.openAccount();
+        customer.closeAccount(1);
+        assertEquals(1, customer.getNumberOfAccounts());
+        assertFalse(customer.getAccounts().contains(second));
+    }
+
+    @Test
+    public void testCloseAccountReturnsBalance() {
+        Customer customer = new Customer();
+        BankAccount second = customer.openAccount();
+        second.deposit(75);
+        assertEquals(75, customer.closeAccount(1), 0.01);
+    }
+
+    @Test
+    public void testCannotCloseOnlyAccount() {
+        Customer customer = new Customer();
+        assertThrows(IllegalStateException.class, () -> customer.closeAccount(0));
+        assertEquals(1, customer.getNumberOfAccounts());
+    }
+
+    @Test
+    public void testCannotCloseNonexistentAccount() {
+        Customer customer = new Customer();
+        customer.openAccount();
+        assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(5));
+        assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(-1));
     }
 }
