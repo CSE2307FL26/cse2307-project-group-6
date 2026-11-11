@@ -5,14 +5,16 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 4;
-	  private static final int MAX_SELECTION = 4;
+    private static final int EXIT_SELECTION = 5;
+    private static final int MAX_SELECTION = 5;
 
     private BankAccount userAccount;
+    private BankAccount otherAccount;
     private Scanner keyboardInput;
 
     public MainMenu() {
         this.userAccount = new BankAccount();
+        this.otherAccount = new BankAccount();
         this.keyboardInput = new Scanner(System.in);
     }
 
@@ -20,9 +22,10 @@ public class MainMenu {
         System.out.println("Welcome to the 237 Bank App!");
 
         System.out.println("1. Make a deposit");
+        System.out.println("4. Transfer to another account");
         System.out.println("2. View transaction history");
         System.out.println("3. Collect a fee (admin)");
-        System.out.println("4. Exit the app");
+        System.out.println("5. Exit the app");
 
     }
 
@@ -40,24 +43,44 @@ public class MainMenu {
             case 1:
                 performDeposit();
                 break;
-            case 2:
+          case 2:
                 viewTransactionHistory();
-            case 3
+                break;
+          case 3:
                 performCollectFee();
+                break;
+          case 4:
+                performTransfer();
                 break;
         }
     }
 
     public void performDeposit() {
         double depositAmount = -1;
-        while(depositAmount < 0) {
+        while(depositAmount <= 0) {
             System.out.print("How much would you like to deposit: ");
-            depositAmount = keyboardInput.nextInt();
+            depositAmount = keyboardInput.nextDouble();
         }
         userAccount.deposit(depositAmount);
     }
 
-    public void viewTransactionHistory() {
+    public void performTransfer() {
+        double transferAmount = -1;
+        while(transferAmount <= 0) {
+            System.out.print("How much would you like to transfer: ");
+            transferAmount = keyboardInput.nextDouble();
+        }
+        try {
+            userAccount.transfer(otherAccount, transferAmount);
+            System.out.println("Transfer complete.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Transfer failed: insufficient funds.");
+        }
+        System.out.println("Your balance: " + userAccount.getBalance());
+        System.out.println("Other account balance: " + otherAccount.getBalance());
+    }
+      
+      public void viewTransactionHistory() {
         List<BankAccount.Transaction> history = userAccount.getTransactionHistory();
         if (history.isEmpty()) {
             System.out.println("No transactions yet.");
@@ -93,5 +116,6 @@ public class MainMenu {
         MainMenu bankApp = new MainMenu();
         bankApp.run();
     }
+
 
 }

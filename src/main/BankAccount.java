@@ -22,6 +22,15 @@ public class BankAccount {
         }
     }
 
+    public void transfer(BankAccount account, double amount) {
+        if (amount <= 0 || amount > this.balance || account == null) {
+            throw new IllegalArgumentException();
+        }
+
+        this.balance -= amount;
+        account.balance += amount;
+    }
+  
     public void collectFee(double fee) {
         if (fee <= 0) {
             throw new IllegalArgumentException("Fee must be positive");
