@@ -22,6 +22,20 @@ public class BankAccount {
         }
     }
 
+    public void addInterest(double interestRate) {
+        if (!Double.isFinite(interestRate) || interestRate < 0) {
+            throw new IllegalArgumentException("Interest rate must be a non-negative number.");
+            }
+
+        double interestPayment = balance * (interestRate / 100);
+
+        if (!Double.isFinite(interestPayment) || !Double.isFinite(balance + interestPayment)) {
+            throw new IllegalArgumentException("Interest payment is too large.");
+            }
+
+        balance += interestPayment;
+    }   
+  
     public void transfer(BankAccount account, double amount) {
         if (amount <= 0 || amount > this.balance || account == null) {
             throw new IllegalArgumentException();

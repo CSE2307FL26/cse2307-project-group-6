@@ -5,8 +5,8 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 6;
-    private static final int MAX_SELECTION = 6;
+    private static final int EXIT_SELECTION = 7;
+    private static final int MAX_SELECTION = 7;
 
     private BankAccount userAccount;
     private BankAccount otherAccount;
@@ -25,7 +25,8 @@ public class MainMenu {
         System.out.println("4. Transfer to another account");
         System.out.println("2. View transaction history");
         System.out.println("3. Collect a fee (admin)");
-        System.out.println("6. Exit the app");
+        System.out.println("6. Add interest payment (Administrator)");
+        System.out.println("7. Exit the app");
 
     }
 
@@ -66,6 +67,9 @@ public class MainMenu {
           case 5:
                 displayBalance();
                 break;
+          case 6:
+                 performAddInterest();
+                 break;
           default:
                 System.out.println("Invalid selection. Please try again.");
         }
@@ -77,7 +81,6 @@ public class MainMenu {
             System.out.print("How much would you like to deposit: ");
             depositAmount = keyboardInput.nextDouble();
         }
-        userAccount.deposit(depositAmount);
     }
 
     public void performTransfer() {
