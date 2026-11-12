@@ -14,59 +14,90 @@ public class BankAccount {
     }
 
     public void deposit(double amount) {
-        if (amount > 0) {
-            this.balance += amount;
-            transactionHistory.add(new Transaction(amount));
-        } else {
-            throw new IllegalArgumentException();
+        validatePositiveAmount(amount);
+
+        if (!Double.isFinite(balance + amount)) {
+            throw new IllegalArgumentException("Deposit exceeds account limits.");
         }
+
+        balance += amount;
+        transactionHistory.add(new Transaction(amount));
     }
-    
+
     public void withdraw(double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Withdrawal amount must be positive");
-        }
-        if (amount > this.balance) {
-            throw new IllegalArgumentException("Insufficient funds");
-        }
-        this.balance -= amount;
+        validatePositiveAmount(amount);
+        validateSufficientFunds(amount);
+
+        balance -= amount;
     }
 
     public void addInterest(double interestRate) {
-        if (!Double.isFinite(interestRate) || interestRate < 0) {
-            throw new IllegalArgumentException("Interest rate must be a non-negative number.");
-            }
+        validateInterestRate(interestRate);
 
         double interestPayment = balance * (interestRate / 100);
 
-        if (!Double.isFinite(interestPayment) || !Double.isFinite(balance + interestPayment)) {
+        if (!Double.isFinite(interestPayment)
+                || !Double.isFinite(balance + interestPayment)) {
             throw new IllegalArgumentException("Interest payment is too large.");
-            }
+        }
 
         balance += interestPayment;
-    }   
-  
-    public void transfer(BankAccount account, double amount) {
-        if (amount <= 0 || amount > this.balance || account == null) {
-            throw new IllegalArgumentException();
+    }
+
+    public void transfer(BankAccount destination, double amount) {
+        validatePositiveAmount(amount);
+        validateSufficientFunds(amount);
+        validateDestination(destination, amount);
+
+        balance -= amount;
+        destination.balance += amount;
+    }
+
+    public void collectFee(double feeAmount) {
+        validatePositiveAmount(feeAmount);
+        validateSufficientFunds(feeAmount);
+
+        balance -= feeAmount;
+    }
+
+    private void validatePositiveAmount(double amount) {
+        if (!Double.isFinite(amount) || amount <= 0) {
+            throw new IllegalArgumentException(
+                "Amount must be positive and finite."
+            );
+        }
+    }
+
+    private void validateSufficientFunds(double amount) {
+        if (amount > balance) {
+            throw new IllegalArgumentException("Insufficient funds.");
+        }
+    }
+
+    private void validateInterestRate(double interestRate) {
+        if (!Double.isFinite(interestRate) || interestRate < 0) {
+            throw new IllegalArgumentException(
+                "Interest rate must be a non-negative number."
+            );
+        }
+    }
+
+    private void validateDestination(BankAccount destination, double amount) {
+        if (destination == null || destination == this) {
+            throw new IllegalArgumentException(
+                "Invalid destination account."
+            );
         }
 
-        this.balance -= amount;
-        account.balance += amount;
-    }
-  
-    public void collectFee(double fee) {
-        if (fee <= 0) {
-            throw new IllegalArgumentException("Fee must be positive");
+        if (!Double.isFinite(destination.balance + amount)) {
+            throw new IllegalArgumentException(
+                "Transfer exceeds account limits."
+            );
         }
-        if (fee > this.balance) {
-            throw new IllegalArgumentException("Insufficient funds to collect fee");
-        }
-        this.balance -= fee;
     }
 
     public double getBalance() {
-        return this.balance;
+        return balance;
     }
 
     public List<Transaction> getTransactionHistory() {
@@ -74,7 +105,8 @@ public class BankAccount {
     }
 
     public static class Transaction {
-        private double amount;
+
+        private final double amount;
 
         public Transaction(double amount) {
             this.amount = amount;
@@ -85,4 +117,3 @@ public class BankAccount {
         }
     }
 }
-

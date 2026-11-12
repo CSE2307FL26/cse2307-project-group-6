@@ -18,6 +18,15 @@ public class Customer {
         this.accounts.add(newAccount);
         return newAccount;
     }
+
+    public BankAccount getAccount(int accountIndex) {
+    if (accountIndex < 0 || accountIndex >= accounts.size()) {
+        throw new IllegalArgumentException("Account does not exist.");
+    }
+
+    return accounts.get(accountIndex);
+    }
+
     public double closeAccount(int index) {
         if (index < 0 || index >= this.accounts.size()) {
             throw new IllegalArgumentException("Account does not exist");
