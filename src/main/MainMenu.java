@@ -6,14 +6,16 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 8;
-    private static final int MAX_SELECTION = 8;
+    private static final int EXIT_SELECTION = 10;
+    private static final int MAX_SELECTION = 10;
 
     private BankAccount userAccount;
     private BankAccount otherAccount;
+    private Customer customer;
     private Scanner keyboardInput;
 
     public MainMenu() {
+        this.customer = new Customer();
         this.userAccount = new BankAccount();
         this.otherAccount = new BankAccount();
         this.keyboardInput = new Scanner(System.in);
@@ -28,7 +30,9 @@ public class MainMenu {
         System.out.println("5. Check account balance");
         System.out.println("6. Add interest payment (Administrator)");
         System.out.println("7. Make a withdrawal");
-        System.out.println("8. Exit the app");
+        System.out.println("8. Open a new account");
+        System.out.println("9. Close an account");
+        System.out.println("10. Exit the app");
     }
 
     public int getUserSelection(int max) {
@@ -76,7 +80,13 @@ public class MainMenu {
                 performWithdraw();
                 break;
             case 8:
-                System.out.println("Thank you for using the 237 Bank App!");
+                openNewAccount();
+                break;
+            case 9:
+                closeExistingAccount();
+                break;
+            case 10:
+                System.out.println("Thank you for using the 237 Bank App. Goodbye!");
                 break;
             default:
                 System.out.println("Invalid selection. Please try again.");
@@ -115,6 +125,25 @@ public class MainMenu {
         } catch (IllegalArgumentException e) {
             System.out.println("Deposit failed: " + e.getMessage());
         }
+    }
+
+    public void openNewAccount() {
+        customer.openAccount();
+        System.out.println("New account opened! You now have " + customer.getNumberOfAccounts() + " accounts.");
+    }
+
+    public void closeExistingAccount() {
+        if (customer.getNumberOfAccounts() == 1) {
+            System.out.println("You cannot close your only account.");
+            return;
+        }
+        for (int i = 0; i < customer.getNumberOfAccounts(); i++) {
+            System.out.printf("%d. Account %d - Balance: $%.2f%n", i + 1, i + 1, customer.getAccounts().get(i).getBalance());
+        }
+        int choice = getUserSelection(customer.getNumberOfAccounts());
+        double payout = customer.closeAccount(choice - 1);
+        userAccount = customer.getAccounts().get(0);
+        System.out.printf("Account closed. $%.2f has been paid out to you.%n", payout);
     }
 
     public void performTransfer() {
