@@ -14,7 +14,7 @@ public class MainMenu {
 
     public MainMenu() {
         customer = new Customer();
-        userAccount = customer.getAccount(0);
+        userAccount = customer.getAccount(  0);
         otherAccount = new BankAccount();
         keyboardInput = new Scanner(System.in);
     }
