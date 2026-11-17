@@ -5,7 +5,9 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 10;
+    private static final int EXIT_SELECTION = 9;
+    private static final String ADMIN_PASSWORD = "ab12";
+    private static final int ADMIN_BACK_SELECTION = 3;
 
     private final Customer customer;
     private final BankAccount otherAccount;
@@ -14,7 +16,7 @@ public class MainMenu {
 
     public MainMenu() {
         customer = new Customer();
-        userAccount = customer.getAccount(  0);
+        userAccount = customer.getAccount(0);
         otherAccount = new BankAccount();
         keyboardInput = new Scanner(System.in);
     }
@@ -23,14 +25,13 @@ public class MainMenu {
         System.out.println("\nWelcome to the 237 Bank App!");
         System.out.println("1. Make a deposit");
         System.out.println("2. View transaction history");
-        System.out.println("3. Collect a fee (Administrator)");
-        System.out.println("4. Transfer to another account");
-        System.out.println("5. Check account balance");
-        System.out.println("6. Add interest payment (Administrator)");
-        System.out.println("7. Make a withdrawal");
-        System.out.println("8. Open a new account");
-        System.out.println("9. Close an account");
-        System.out.println("10. Exit the app");
+        System.out.println("3. Transfer to another account");
+        System.out.println("4. Check account balance");
+        System.out.println("5. Make a withdrawal");
+        System.out.println("6. Open a new account");
+        System.out.println("7. Close an account");
+        System.out.println("8. Administrator login");
+        System.out.println("9. Exit the app");
     }
 
     public int getUserSelection(int maxSelection) {
@@ -70,21 +71,58 @@ public class MainMenu {
         switch (selection) {
             case 1 -> performDeposit();
             case 2 -> viewTransactionHistory();
-            case 3 -> performCollectFee();
-            case 4 -> performTransfer();
-            case 5 -> displayBalance();
-            case 6 -> performAddInterest();
-            case 7 -> performWithdraw();
-            case 8 -> openNewAccount();
-            case 9 -> closeExistingAccount();
-            case 10 -> System.out.println("Thank you for using the 237 Bank App!");
+            case 3 -> performTransfer();
+            case 4 -> displayBalance();
+            case 5 -> performWithdraw();
+            case 6 -> openNewAccount();
+            case 7 -> closeExistingAccount();
+            case 8 -> performAdminLogin();
+            case 9 -> System.out.println("Thank you for using the 237 Bank App!");
             default -> System.out.println("Invalid selection.");
         }
     }
 
+    public void performAdminLogin() {
+        System.out.print("Enter admin password (ab12): ");
+        String password = keyboardInput.nextLine().trim();
+
+        if (ADMIN_PASSWORD.equals(password)) {
+            System.out.println("Admin access granted.");
+            runAdminMenu();
+        } else {
+            System.out.println("Incorrect password.");
+        }
+    }
+
+    public void displayAdminOptions() {
+        System.out.println("\nAdministrator tasks");
+        System.out.println("1. Collect a fee");
+        System.out.println("2. Add interest payment");
+        System.out.println("3. Back to main menu");
+    }
+
+    public void processAdminInput(int selection) {
+        switch (selection) {
+            case 1 -> performCollectFee();
+            case 2 -> performAddInterest();
+            case 3 -> System.out.println("Returning to main menu.");
+            default -> System.out.println("Invalid selection.");
+        }
+    }
+
+    private void runAdminMenu() {
+        int selection;
+        do {
+            displayAdminOptions();
+            selection = readSelection(ADMIN_BACK_SELECTION, "Please make a selection: ");
+            processAdminInput(selection);
+        } while (selection != ADMIN_BACK_SELECTION);
+    }
+
     public void performDeposit() {
         Double amount = readNumber("How much would you like to deposit: ");
-        if (amount == null) return;
+        if (amount == null)
+            return;
 
         try {
             userAccount.deposit(amount);
@@ -96,7 +134,8 @@ public class MainMenu {
 
     public void performWithdraw() {
         Double amount = readNumber("How much would you like to withdraw: ");
-        if (amount == null) return;
+        if (amount == null)
+            return;
 
         try {
             userAccount.withdraw(amount);
@@ -108,7 +147,8 @@ public class MainMenu {
 
     public void performTransfer() {
         Double amount = readNumber("How much would you like to transfer: ");
-        if (amount == null) return;
+        if (amount == null)
+            return;
 
         try {
             userAccount.transfer(otherAccount, amount);
@@ -123,7 +163,8 @@ public class MainMenu {
 
     public void performCollectFee() {
         Double amount = readNumber("Enter fee amount to collect: ");
-        if (amount == null) return;
+        if (amount == null)
+            return;
 
         try {
             userAccount.collectFee(amount);
@@ -135,7 +176,8 @@ public class MainMenu {
 
     public void performAddInterest() {
         Double interestRate = readNumber("Enter interest rate (%): ");
-        if (interestRate == null) return;
+        if (interestRate == null)
+            return;
 
         try {
             userAccount.addInterest(interestRate);
