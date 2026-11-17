@@ -71,15 +71,13 @@ public class MainMenu {
         switch (selection) {
             case 1 -> performDeposit();
             case 2 -> viewTransactionHistory();
-            case 3 -> performCollectFee();
-            case 4 -> performTransfer();
-            case 5 -> displayBalance();
-            case 6 -> performAddInterest();
-            case 7 -> performWithdraw();
-            case 8 -> openNewAccount();
-            case 9 -> closeExistingAccount();
-            case 10 -> performAdminLogin();
-            case 11 -> System.out.println("Thank you for using the 237 Bank App!");
+            case 3 -> performTransfer();
+            case 4 -> displayBalance();
+            case 5 -> performWithdraw();
+            case 6 -> openNewAccount();
+            case 7 -> closeExistingAccount();
+            case 8 -> performAdminLogin();
+            case 9 -> System.out.println("Thank you for using the 237 Bank App!");
             default -> System.out.println("Invalid selection.");
         }
     }
