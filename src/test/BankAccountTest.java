@@ -3,6 +3,7 @@ package test;
 import main.BankAccount;
 import main.BankAccount.Transaction;
 import main.Customer;
+import main.MainMenu;
 
 import static org.junit.Assert.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,6 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,6 +23,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 public class BankAccountTest {
+
+    @Test
+    public void correctPasswordGrantsAccess() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(output));
+        System.setIn(new ByteArrayInputStream("ab12\n".getBytes()));
+        new MainMenu().performAdminLogin();
+        assertTrue(output.toString().contains("Admin access granted."));
+    }
+
+    @Test
+    public void wrongPasswordIsDenied() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(output));
+        System.setIn(new ByteArrayInputStream("wrong\n".getBytes()));
+        new MainMenu().performAdminLogin();
+        assertTrue(output.toString().contains("Incorrect password."));
+        assertFalse(output.toString().contains("Admin access granted."));
+    }
 
     @Test
     public void testNewCustomerHasOneAccount() {
@@ -50,7 +73,6 @@ public class BankAccountTest {
         assertEquals(0, second.getBalance(), 0.01);
         assertTrue(customer.getAccounts().contains(second));
     }
-    
 
     @Test
     public void testCloseAccountRemovesAccount() {
@@ -243,31 +265,32 @@ public class BankAccountTest {
         List<Transaction> history = account.getTransactionHistory();
         assertEquals(100, history.size());
     }
-        @Test
-        void testCollectFee() {
+
+    @Test
+    void testCollectFee() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
         testAccount.collectFee(15);
         assertEquals(85, testAccount.getBalance(), 0.01);
     }
 
-        @Test
-        void testCollectFeeEntireBalance() {
+    @Test
+    void testCollectFeeEntireBalance() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(20);
         testAccount.collectFee(20);
         assertEquals(0, testAccount.getBalance(), 0.01);
     }
 
-        @Test
-        void testInvalidFeeNegative() {
+    @Test
+    void testInvalidFeeNegative() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
         try {
             testAccount.collectFee(-10);
             fail();
         } catch (IllegalArgumentException e) {
-            //do nothing, test passes
+            // do nothing, test passes
         }
     }
 
@@ -285,16 +308,15 @@ public class BankAccountTest {
         assertEquals(150, account.getBalance(), 0.01);
     }
 
-
-        @Test
-        void testInvalidFeeZero() {
+    @Test
+    void testInvalidFeeZero() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
         try {
             testAccount.collectFee(0);
             fail();
         } catch (IllegalArgumentException e) {
-            //do nothing, test passes
+            // do nothing, test passes
         }
     }
 
@@ -314,7 +336,7 @@ public class BankAccountTest {
         assertEquals(0, testAccount.getBalance(), 0.01);
     }
 
-     @Test
+    @Test
     public void testInvalidWithdrawNegative() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
@@ -322,11 +344,11 @@ public class BankAccountTest {
             testAccount.withdraw(-50);
             fail();
         } catch (IllegalArgumentException e) {
-            //do nothing, test passes
+            // do nothing, test passes
         }
     }
 
-     @Test
+    @Test
     public void testInvalidWithdrawZero() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
@@ -334,11 +356,11 @@ public class BankAccountTest {
             testAccount.withdraw(0);
             fail();
         } catch (IllegalArgumentException e) {
-            //do nothing, test passes
+            // do nothing, test passes
         }
     }
 
-     @Test
+    @Test
     public void testWithdrawInsufficientFunds() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(30);
@@ -346,7 +368,7 @@ public class BankAccountTest {
             testAccount.withdraw(100);
             fail();
         } catch (IllegalArgumentException e) {
-            //balance should stay the same
+            // balance should stay the same
             assertEquals(30, testAccount.getBalance(), 0.01);
         }
     }
@@ -384,8 +406,8 @@ public class BankAccountTest {
 
         account.deposit(1000);
 
-    assertThrows(IllegalArgumentException.class,() -> account.addInterest(-5));
-    assertEquals(1000, account.getBalance(), 0.01);
+        assertThrows(IllegalArgumentException.class, () -> account.addInterest(-5));
+        assertEquals(1000, account.getBalance(), 0.01);
     }
 
     @Test
@@ -393,33 +415,33 @@ public class BankAccountTest {
         BankAccount account = new BankAccount();
         account.deposit(1000);
 
-        assertThrows(IllegalArgumentException.class,() -> account.addInterest(Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> account.addInterest(Double.NaN));
 
-        assertThrows(IllegalArgumentException.class,() -> account.addInterest(Double.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> account.addInterest(Double.POSITIVE_INFINITY));
 
         assertEquals(1000, account.getBalance(), 0.01);
     }
+
     @Test
     public void testInterestPaymentOverflow() {
         BankAccount account = new BankAccount();
 
         account.deposit(Double.MAX_VALUE);
 
-        assertThrows(IllegalArgumentException.class,() -> account.addInterest(100));
+        assertThrows(IllegalArgumentException.class, () -> account.addInterest(100));
 
         assertEquals(Double.MAX_VALUE, account.getBalance(), 0.0);
     }
- 
 
-        @Test
-        void testFeeExceedsBalance() {
+    @Test
+    void testFeeExceedsBalance() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(10);
         try {
             testAccount.collectFee(50);
             fail();
         } catch (IllegalArgumentException e) {
-            //balance should stay the same
+            // balance should stay the same
             assertEquals(10, testAccount.getBalance(), 0.01);
         }
     }
