@@ -32,17 +32,25 @@ public class BankAccount {
     }
 
     public void addInterest(double interestRate) {
-        validateInterestRate(interestRate);
+    validateInterestRate(interestRate);
 
-        double interestPayment = balance * (interestRate / 100);
+    double interestPayment = balance * (interestRate / 100);
 
-        if (!Double.isFinite(interestPayment)
-                || !Double.isFinite(balance + interestPayment)) {
-            throw new IllegalArgumentException("Interest payment is too large.");
+    if (!Double.isFinite(interestPayment)
+            || !Double.isFinite(balance + interestPayment)) {
+        throw new IllegalArgumentException(
+            "Interest payment is too large."
+        );
         }
 
-        balance += interestPayment;
-    }
+    balance += interestPayment;
+
+    if (interestPayment > 0) {
+        transactionHistory.add(
+            new Transaction("Interest", interestPayment)
+        );
+        }
+    }   
 
     public void transfer(BankAccount destination, double amount) {
         validatePositiveAmount(amount);
@@ -106,10 +114,20 @@ public class BankAccount {
 
     public static class Transaction {
 
+        private final String type;
         private final double amount;
 
         public Transaction(double amount) {
+            this("Deposit", amount);
+        }
+
+        public Transaction(String type, double amount) {
+            this.type = type;
             this.amount = amount;
+        }
+
+        public String getType() {
+            return type;
         }
 
         public double getAmount() {

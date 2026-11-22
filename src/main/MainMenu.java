@@ -134,16 +134,21 @@ public class MainMenu {
     }
 
     public void performAddInterest() {
-        Double interestRate = readNumber("Enter interest rate (%): ");
-        if (interestRate == null) return;
+    BankAccount selectedAccount = selectAccount();
 
-        try {
-            userAccount.addInterest(interestRate);
-            printBalance(userAccount);
-        } catch (IllegalArgumentException exception) {
-            printFailure("Interest payment", exception);
-        }
+    Double interestRate = readNumber("Enter interest rate (%): ");
+    if (interestRate == null) {
+        return;
     }
+
+    try {
+        selectedAccount.addInterest(interestRate);
+        System.out.println("Interest payment successful.");
+        printBalance(selectedAccount);
+    } catch (IllegalArgumentException exception) {
+        printFailure("Interest payment", exception);
+    }
+}
 
     public void displayBalance() {
     BankAccount selectedAccount = selectAccount();
@@ -163,8 +168,10 @@ public class MainMenu {
         }
 
         System.out.println("Transaction history:");
+
         for (BankAccount.Transaction transaction : history) {
-            System.out.printf("Deposit: $%.2f%n", transaction.getAmount());
+            System.out.printf("%s: $%.2f%n",transaction.getType(),transaction.getAmount()
+            );
         }
     }
 

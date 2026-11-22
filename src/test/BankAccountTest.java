@@ -411,8 +411,8 @@ public class BankAccountTest {
     }
  
 
-        @Test
-        void testFeeExceedsBalance() {
+    @Test
+    void testFeeExceedsBalance() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(10);
         try {
@@ -423,4 +423,55 @@ public class BankAccountTest {
             assertEquals(10, testAccount.getBalance(), 0.01);
         }
     }
+    
+    @Test
+    public void testInterestPaymentRecordedInHistory() {
+        BankAccount account = new BankAccount();
+        account.deposit(1000);
+        account.addInterest(5);
+
+        List<Transaction> history = account.getTransactionHistory();
+
+        assertEquals(2, history.size());
+        assertEquals("Interest", history.get(1).getType());
+        assertEquals(50, history.get(1).getAmount(), 0.01);
+        assertEquals(1050, account.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testInterestAppliedToSelectedAccountOnly() {
+        Customer customer = new Customer();
+        BankAccount firstAccount = customer.getAccount(0);
+        BankAccount secondAccount = customer.openAccount();
+
+        firstAccount.deposit(1000);
+        secondAccount.deposit(500);
+        secondAccount.addInterest(10);
+
+        assertEquals(1000, firstAccount.getBalance(), 0.01);
+        assertEquals(550, secondAccount.getBalance(), 0.01);
+        assertEquals(1, firstAccount.getTransactionHistory().size());
+        assertEquals(2, secondAccount.getTransactionHistory().size());
+    }
+
+    @Test
+    public void testZeroInterestDoesNotCreateTransaction() {    
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.addInterest(0);
+
+        assertEquals(100, account.getBalance(), 0.01);
+        assertEquals(1, account.getTransactionHistory().size());
+    }
+
+    @Test
+    public void testInvalidInterestDoesNotCreateTransaction() {
+        BankAccount account = new BankAccount();
+        account.deposit(1000);
+
+        assertThrows(IllegalArgumentException.class,() -> account.addInterest(-5));
+        assertEquals(1000, account.getBalance(), 0.01);
+        assertEquals(1, account.getTransactionHistory().size());
+    }
+
 }
