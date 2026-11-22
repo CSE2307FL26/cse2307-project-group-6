@@ -326,7 +326,7 @@ public class BankAccountTest {
         }
     }
 
-     @Test
+    @Test
     public void testInvalidWithdrawZero() {
         BankAccount testAccount = new BankAccount();
         testAccount.deposit(100);
@@ -338,18 +338,45 @@ public class BankAccountTest {
         }
     }
 
-     @Test
-    public void testWithdrawInsufficientFunds() {
-        BankAccount testAccount = new BankAccount();
-        testAccount.deposit(30);
-        try {
-            testAccount.withdraw(100);
-            fail();
-        } catch (IllegalArgumentException e) {
-            //balance should stay the same
-            assertEquals(30, testAccount.getBalance(), 0.01);
-        }
+    
+    @Test
+    public void testOverdraftChargesTenDollarFee() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.withdraw(120);
+
+        assertEquals(-30, account.getBalance(), 0.01);
     }
+
+    @Test
+    public void testExactBalanceWithdrawalHasNoFee() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.withdraw(100);
+
+        assertEquals(0, account.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testRepeatedOverdraftsChargeRepeatedFees() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.withdraw(120);
+        account.withdraw(20);
+
+        assertEquals(-60, account.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testDepositAfterOverdraft() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.withdraw(120);
+        account.deposit(50);
+
+        assertEquals(20, account.getBalance(), 0.01);
+    }
+
 
     @Test
     public void testAddInterest() {

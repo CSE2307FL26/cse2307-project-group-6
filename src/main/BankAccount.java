@@ -7,6 +7,7 @@ public class BankAccount {
 
     private double balance;
     private List<Transaction> transactionHistory;
+    private static final double OVERDRAFT_FEE = 10.00;
 
     public BankAccount() {
         this.balance = 0;
@@ -26,9 +27,21 @@ public class BankAccount {
 
     public void withdraw(double amount) {
         validatePositiveAmount(amount);
-        validateSufficientFunds(amount);
 
-        balance -= amount;
+        boolean overdraft = amount > balance;
+        double newBalance = balance - amount;
+
+        if (overdraft) {
+            newBalance -= OVERDRAFT_FEE;
+        }
+
+        if (!Double.isFinite(newBalance)) {
+            throw new IllegalArgumentException(
+                "Withdrawal exceeds account limits."
+            );
+        }
+
+    balance = newBalance;
     }
 
     public void addInterest(double interestRate) {
