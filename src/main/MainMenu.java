@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 10;
+    private static final int EXIT_SELECTION = 11;
 
     private final Customer customer;
     private final BankAccount otherAccount;
@@ -13,10 +13,22 @@ public class MainMenu {
     private BankAccount userAccount;
 
     public MainMenu() {
-        customer = new Customer();
-        userAccount = customer.getAccount(  0);
-        otherAccount = new BankAccount();
         keyboardInput = new Scanner(System.in);
+        customer = new Customer(readSsn());
+        userAccount = customer.getAccount(0);
+        otherAccount = new BankAccount();
+        
+    }
+
+    private String readSsn() {
+        while (true) {
+            System.out.print("Enter your SSN (123-45-6789): ");
+            String input = keyboardInput.nextLine();
+            if (BankAccount.isValidSsn(input)) {
+                return input;
+            }
+            System.out.println("Invalid SSN. Please try again.");
+        }
     }
 
     public void displayOptions() {
@@ -30,7 +42,8 @@ public class MainMenu {
         System.out.println("7. Make a withdrawal");
         System.out.println("8. Open a new account");
         System.out.println("9. Close an account");
-        System.out.println("10. Exit the app");
+        System.out.println("10. Merge two accounts");
+        System.out.println("11. Exit the app");
     }
 
     public int getUserSelection(int maxSelection) {
@@ -77,7 +90,8 @@ public class MainMenu {
             case 7 -> performWithdraw();
             case 8 -> openNewAccount();
             case 9 -> closeExistingAccount();
-            case 10 -> System.out.println("Thank you for using the 237 Bank App!");
+            case 10 -> mergeTwoAccounts();
+            case 11 -> System.out.println("Thank you for using the 237 Bank App!");
             default -> System.out.println("Invalid selection.");
         }
     }
@@ -145,9 +159,39 @@ public class MainMenu {
         }
     }
 
+    public void mergeTwoAccounts() {
+        int accountCount = customer.getNumberOfAccounts();
+
+        if (accountCount < 2) {
+            System.out.println("You need at least two accounts to merge.");
+            return;
+        }
+
+        displayAccounts();
+        int sourceIndex = readSelection(accountCount,
+                "Select the account to merge FROM (it will be closed): ") - 1;
+        int targetIndex = readSelection(accountCount,
+                "Select the account to merge INTO: ") - 1;
+
+        BankAccount source = customer.getAccount(sourceIndex);
+        BankAccount target = customer.getAccount(targetIndex);
+
+        try {
+            customer.mergeAccounts(source.getAccountNumber(), target.getAccountNumber());
+            if (userAccount == source) {
+                userAccount = target;
+            }
+            System.out.printf("Merged account #%s into #%s. New balance: $%.2f%n",
+                    source.getAccountNumber(), target.getAccountNumber(),
+                    target.getBalance());
+        } catch (IllegalArgumentException exception) {
+            printFailure("Merge", exception);
+        }
+    }
+
     public void displayBalance() {
-        System.out.printf("Current account balance: $%.2f%n",
-                userAccount.getBalance());
+        System.out.printf("Account #%s balance: $%.2f%n",
+                userAccount.getAccountNumber(), userAccount.getBalance());
     }
 
     public void viewTransactionHistory() {
@@ -165,9 +209,11 @@ public class MainMenu {
     }
 
     public void openNewAccount() {
-        customer.openAccount();
-        System.out.printf("New account opened! You now have %d accounts.%n",
-                customer.getNumberOfAccounts());
+        BankAccount newAccount = customer.openAccount();
+        System.out.printf("New account opened! Account #%s (SSN %s)%n",
+            newAccount.getAccountNumber(), newAccount.getMaskedSsn());
+        System.out.printf("You now have %d accounts.%n",
+            customer.getNumberOfAccounts());
     }
 
     public void closeExistingAccount() {
@@ -180,7 +226,7 @@ public class MainMenu {
 
         displayAccounts();
         int accountNumber = readSelection(
-                accountCount, "Select the account number to close: ");
+                accountCount, "Select which account to close (by list number): ");
 
         closeSelectedAccount(accountNumber - 1);
     }
@@ -188,8 +234,8 @@ public class MainMenu {
     private void displayAccounts() {
         for (int index = 0; index < customer.getNumberOfAccounts(); index++) {
             BankAccount account = customer.getAccount(index);
-            System.out.printf("%d. Balance: $%.2f%n",
-                    index + 1, account.getBalance());
+            System.out.printf("%d. Account #%s  Balance: $%.2f%n",
+                    index + 1, account.getAccountNumber(), account.getBalance());
         }
     }
 

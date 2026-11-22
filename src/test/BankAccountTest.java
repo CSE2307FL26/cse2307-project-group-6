@@ -7,42 +7,47 @@ import main.Customer;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.util.List;
-
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 public class BankAccountTest {
 
+    private static final String TEST_SSN = "123-45-6789";
+
     @Test
     public void testNewCustomerHasOneAccount() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         assertEquals(1, customer.getNumberOfAccounts());
     }
 
     @Test
     public void testOpenAccountAddsAccount() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         customer.openAccount();
         assertEquals(2, customer.getNumberOfAccounts());
     }
 
     @Test
     public void testNewAccountStartsAtZero() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         BankAccount newAccount = customer.openAccount();
         assertEquals(0, newAccount.getBalance(), 0.01);
     }
 
     @Test
     public void testNewAccountIsSeparate() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         BankAccount first = customer.getAccounts().get(0);
         BankAccount second = customer.openAccount();
         first.deposit(100);
@@ -54,7 +59,7 @@ public class BankAccountTest {
 
     @Test
     public void testCloseAccountRemovesAccount() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         BankAccount second = customer.openAccount();
         customer.closeAccount(1);
         assertEquals(1, customer.getNumberOfAccounts());
@@ -63,7 +68,7 @@ public class BankAccountTest {
 
     @Test
     public void testCloseAccountReturnsBalance() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         BankAccount second = customer.openAccount();
         second.deposit(75);
         assertEquals(75, customer.closeAccount(1), 0.01);
@@ -71,14 +76,14 @@ public class BankAccountTest {
 
     @Test
     public void testCannotCloseOnlyAccount() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         assertThrows(IllegalStateException.class, () -> customer.closeAccount(0));
         assertEquals(1, customer.getNumberOfAccounts());
     }
 
     @Test
     public void testCannotCloseNonexistentAccount() {
-        Customer customer = new Customer();
+        Customer customer = new Customer(TEST_SSN);
         customer.openAccount();
         assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(5));
         assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(-1));
@@ -422,5 +427,148 @@ public class BankAccountTest {
             //balance should stay the same
             assertEquals(10, testAccount.getBalance(), 0.01);
         }
+    }
+
+    @Test
+    public void testNormalizeSsn() {
+        assertEquals("123-45-6789", BankAccount.normalizeSsn("123-45-6789"));
+        assertEquals("123-45-6789", BankAccount.normalizeSsn("123456789"));
+    }
+
+    @Test
+    public void testInvalidSsnFormatThrows() {
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("12-34"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("abc-de-fghi"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn(null));
+    }
+
+    @Test
+    public void testInvalidSsnNumbersThrow() {
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("000-45-6789"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("123-00-6789"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("123-45-0000"));
+    }
+
+    @Test
+    public void testIsValidSsn() {
+        assertTrue(BankAccount.isValidSsn(TEST_SSN));
+        assertFalse(BankAccount.isValidSsn("abc"));
+    }
+
+    @Test
+    public void testMaskSsn() {
+        assertEquals("***-**-6789", BankAccount.maskSsn(TEST_SSN));
+    }
+
+    @Test
+    public void testAccountNumberIsEightDigits() {
+        BankAccount account = new BankAccount(TEST_SSN);
+        assertTrue(account.getAccountNumber().matches("\\d{8}"));
+    }
+
+    @Test
+    public void testAccountNumbersAreUnique() {
+        BankAccount first = new BankAccount(TEST_SSN);
+        BankAccount second = new BankAccount(TEST_SSN);
+        assertNotEquals(first.getAccountNumber(), second.getAccountNumber());
+    }
+
+    @Test
+    public void testAccountStoresSsn() {
+        BankAccount account = new BankAccount(TEST_SSN);
+        assertEquals(TEST_SSN, account.getSsn());
+        assertEquals("***-**-6789", account.getMaskedSsn());
+    }
+
+    @Test
+    public void testCustomerStoresSsn() {
+        Customer customer = new Customer(TEST_SSN);
+        assertEquals(TEST_SSN, customer.getSsn());
+        assertEquals("***-**-6789", customer.getMaskedSsn());
+    }
+
+    @Test
+    public void testOpenedAccountHasCustomerSsn() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount opened = customer.openAccount();
+        assertEquals(TEST_SSN, opened.getSsn());
+    }
+
+    @Test
+    public void testGetAccountByNumber() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount opened = customer.openAccount();
+        assertSame(opened, customer.getAccountByNumber(opened.getAccountNumber()));
+    }
+
+    @Test
+    public void testGetAccountByUnknownNumberThrows() {
+        Customer customer = new Customer(TEST_SSN);
+        assertThrows(IllegalArgumentException.class,
+                () -> customer.getAccountByNumber("00000000"));
+    }
+
+    @Test
+    public void testMergeMovesBalanceIntoTarget() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+        first.deposit(100);
+        second.deposit(50);
+
+        BankAccount merged = customer.mergeAccounts(
+                second.getAccountNumber(), first.getAccountNumber());
+
+        assertSame(first, merged);
+        assertEquals(150, merged.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testMergeClosesSourceAccount() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+
+        customer.mergeAccounts(second.getAccountNumber(), first.getAccountNumber());
+
+        assertEquals(1, customer.getNumberOfAccounts());
+        assertFalse(customer.getAccounts().contains(second));
+    }
+
+    @Test
+    public void testMergeEmptyAccount() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+        first.deposit(100);
+
+        customer.mergeAccounts(second.getAccountNumber(), first.getAccountNumber());
+
+        assertEquals(100, first.getBalance(), 0.01);
+        assertEquals(1, customer.getNumberOfAccounts());
+    }
+
+    @Test
+    public void testMergeAccountIntoItselfThrows() {
+        Customer customer = new Customer(TEST_SSN);
+        String number = customer.getAccount(0).getAccountNumber();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> customer.mergeAccounts(number, number));
+        assertEquals(1, customer.getNumberOfAccounts());
+    }
+
+    @Test
+    public void testMergeWithAnotherCustomersAccountThrows() {
+        Customer customer = new Customer(TEST_SSN);
+        Customer otherCustomer = new Customer("234-56-7890");
+        BankAccount mine = customer.getAccount(0);
+        BankAccount theirs = otherCustomer.getAccount(0);
+        theirs.deposit(500);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> customer.mergeAccounts(theirs.getAccountNumber(), mine.getAccountNumber()));
+        assertEquals(0, mine.getBalance(), 0.01);
+        assertEquals(500, theirs.getBalance(), 0.01);
     }
 }
