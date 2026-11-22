@@ -13,10 +13,22 @@ public class MainMenu {
     private BankAccount userAccount;
 
     public MainMenu() {
-        customer = new Customer();
-        userAccount = customer.getAccount(  0);
-        otherAccount = new BankAccount();
         keyboardInput = new Scanner(System.in);
+        customer = new Customer(readSsn());
+        userAccount = customer.getAccount(0);
+        otherAccount = new BankAccount();
+        
+    }
+
+    private String readSsn() {
+        while (true) {
+            System.out.print("Enter your SSN (123-45-6789): ");
+            String input = keyboardInput.nextLine();
+            if (BankAccount.isValidSsn(input)) {
+                return input;
+            }
+            System.out.println("Invalid SSN. Please try again.");
+        }
     }
 
     public void displayOptions() {
@@ -146,8 +158,8 @@ public class MainMenu {
     }
 
     public void displayBalance() {
-        System.out.printf("Current account balance: $%.2f%n",
-                userAccount.getBalance());
+        System.out.printf("Account #%s balance: $%.2f%n",
+                userAccount.getAccountNumber(), userAccount.getBalance());
     }
 
     public void viewTransactionHistory() {
@@ -165,9 +177,11 @@ public class MainMenu {
     }
 
     public void openNewAccount() {
-        customer.openAccount();
-        System.out.printf("New account opened! You now have %d accounts.%n",
-                customer.getNumberOfAccounts());
+        BankAccount newAccount = customer.openAccount();
+        System.out.printf("New account opened! Account #%s (SSN %s)%n",
+            newAccount.getAccountNumber(), newAccount.getMaskedSsn());
+        System.out.printf("You now have %d accounts.%n",
+            customer.getNumberOfAccounts());
     }
 
     public void closeExistingAccount() {
@@ -180,7 +194,7 @@ public class MainMenu {
 
         displayAccounts();
         int accountNumber = readSelection(
-                accountCount, "Select the account number to close: ");
+                accountCount, "Select which account to close (by list number): ");
 
         closeSelectedAccount(accountNumber - 1);
     }
@@ -188,8 +202,8 @@ public class MainMenu {
     private void displayAccounts() {
         for (int index = 0; index < customer.getNumberOfAccounts(); index++) {
             BankAccount account = customer.getAccount(index);
-            System.out.printf("%d. Balance: $%.2f%n",
-                    index + 1, account.getBalance());
+            System.out.printf("%d. Account #%s  Balance: $%.2f%n",
+                    index + 1, account.getAccountNumber(), account.getBalance());
         }
     }
 
