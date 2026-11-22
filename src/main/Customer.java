@@ -20,7 +20,22 @@ public class Customer {
         this.accounts.add(newAccount);
         return newAccount;
     }
+    
+    public BankAccount mergeAccounts(String sourceAccountNumber, String targetAccountNumber) {
+        BankAccount source = getAccountByNumber(sourceAccountNumber);
+        BankAccount target = getAccountByNumber(targetAccountNumber);
 
+        if (source == target) {
+            throw new IllegalArgumentException("Cannot merge an account into itself.");
+        }
+
+        if (source.getBalance() > 0) {
+            source.transfer(target, source.getBalance());
+        }
+
+        accounts.remove(source);
+        return target;
+    }
     public BankAccount getAccount(int accountIndex) {
         if (accountIndex < 0 || accountIndex >= accounts.size()) {
             throw new IllegalArgumentException("Account does not exist.");
@@ -60,7 +75,7 @@ public class Customer {
     public String getSsn() {
         return ssn;
     }
-    
+
     public String getMaskedSsn() {
         return BankAccount.maskSsn(ssn);
     }

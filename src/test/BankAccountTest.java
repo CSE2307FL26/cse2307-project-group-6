@@ -507,4 +507,68 @@ public class BankAccountTest {
         assertThrows(IllegalArgumentException.class,
                 () -> customer.getAccountByNumber("00000000"));
     }
+
+    @Test
+    public void testMergeMovesBalanceIntoTarget() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+        first.deposit(100);
+        second.deposit(50);
+
+        BankAccount merged = customer.mergeAccounts(
+                second.getAccountNumber(), first.getAccountNumber());
+
+        assertSame(first, merged);
+        assertEquals(150, merged.getBalance(), 0.01);
+    }
+
+    @Test
+    public void testMergeClosesSourceAccount() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+
+        customer.mergeAccounts(second.getAccountNumber(), first.getAccountNumber());
+
+        assertEquals(1, customer.getNumberOfAccounts());
+        assertFalse(customer.getAccounts().contains(second));
+    }
+
+    @Test
+    public void testMergeEmptyAccount() {
+        Customer customer = new Customer(TEST_SSN);
+        BankAccount first = customer.getAccount(0);
+        BankAccount second = customer.openAccount();
+        first.deposit(100);
+
+        customer.mergeAccounts(second.getAccountNumber(), first.getAccountNumber());
+
+        assertEquals(100, first.getBalance(), 0.01);
+        assertEquals(1, customer.getNumberOfAccounts());
+    }
+
+    @Test
+    public void testMergeAccountIntoItselfThrows() {
+        Customer customer = new Customer(TEST_SSN);
+        String number = customer.getAccount(0).getAccountNumber();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> customer.mergeAccounts(number, number));
+        assertEquals(1, customer.getNumberOfAccounts());
+    }
+
+    @Test
+    public void testMergeWithAnotherCustomersAccountThrows() {
+        Customer customer = new Customer(TEST_SSN);
+        Customer otherCustomer = new Customer("234-56-7890");
+        BankAccount mine = customer.getAccount(0);
+        BankAccount theirs = otherCustomer.getAccount(0);
+        theirs.deposit(500);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> customer.mergeAccounts(theirs.getAccountNumber(), mine.getAccountNumber()));
+        assertEquals(0, mine.getBalance(), 0.01);
+        assertEquals(500, theirs.getBalance(), 0.01);
+    }
 }

@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private static final int EXIT_SELECTION = 10;
+    private static final int EXIT_SELECTION = 11;
 
     private final Customer customer;
     private final BankAccount otherAccount;
@@ -42,7 +42,8 @@ public class MainMenu {
         System.out.println("7. Make a withdrawal");
         System.out.println("8. Open a new account");
         System.out.println("9. Close an account");
-        System.out.println("10. Exit the app");
+        System.out.println("10. Merge two accounts");
+        System.out.println("11. Exit the app");
     }
 
     public int getUserSelection(int maxSelection) {
@@ -89,7 +90,8 @@ public class MainMenu {
             case 7 -> performWithdraw();
             case 8 -> openNewAccount();
             case 9 -> closeExistingAccount();
-            case 10 -> System.out.println("Thank you for using the 237 Bank App!");
+            case 10 -> mergeTwoAccounts();
+            case 11 -> System.out.println("Thank you for using the 237 Bank App!");
             default -> System.out.println("Invalid selection.");
         }
     }
@@ -154,6 +156,36 @@ public class MainMenu {
             displayBalance();
         } catch (IllegalArgumentException exception) {
             printFailure("Interest payment", exception);
+        }
+    }
+
+    public void mergeTwoAccounts() {
+        int accountCount = customer.getNumberOfAccounts();
+
+        if (accountCount < 2) {
+            System.out.println("You need at least two accounts to merge.");
+            return;
+        }
+
+        displayAccounts();
+        int sourceIndex = readSelection(accountCount,
+                "Select the account to merge FROM (it will be closed): ") - 1;
+        int targetIndex = readSelection(accountCount,
+                "Select the account to merge INTO: ") - 1;
+
+        BankAccount source = customer.getAccount(sourceIndex);
+        BankAccount target = customer.getAccount(targetIndex);
+
+        try {
+            customer.mergeAccounts(source.getAccountNumber(), target.getAccountNumber());
+            if (userAccount == source) {
+                userAccount = target;
+            }
+            System.out.printf("Merged account #%s into #%s. New balance: $%.2f%n",
+                    source.getAccountNumber(), target.getAccountNumber(),
+                    target.getBalance());
+        } catch (IllegalArgumentException exception) {
+            printFailure("Merge", exception);
         }
     }
 
