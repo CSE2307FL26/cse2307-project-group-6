@@ -88,7 +88,7 @@ public class MainMenu {
 
         try {
             userAccount.deposit(amount);
-            displayBalance();
+            printBalance(userAccount);
         } catch (IllegalArgumentException exception) {
             printFailure("Deposit", exception);
         }
@@ -100,7 +100,7 @@ public class MainMenu {
 
         try {
             userAccount.withdraw(amount);
-            displayBalance();
+            printBalance(userAccount);
         } catch (IllegalArgumentException exception) {
             printFailure("Withdrawal", exception);
         }
@@ -116,7 +116,7 @@ public class MainMenu {
         } catch (IllegalArgumentException exception) {
             printFailure("Transfer", exception);
         }
-        displayBalance();
+        printBalance(userAccount);
         System.out.printf("Other account balance: $%.2f%n",
                 otherAccount.getBalance());
     }
@@ -127,7 +127,7 @@ public class MainMenu {
 
         try {
             userAccount.collectFee(amount);
-            displayBalance();
+            printBalance(userAccount);
         } catch (IllegalArgumentException exception) {
             printFailure("Fee collection", exception);
         }
@@ -139,15 +139,19 @@ public class MainMenu {
 
         try {
             userAccount.addInterest(interestRate);
-            displayBalance();
+            printBalance(userAccount);
         } catch (IllegalArgumentException exception) {
             printFailure("Interest payment", exception);
         }
     }
 
     public void displayBalance() {
-        System.out.printf("Current account balance: $%.2f%n",
-                userAccount.getBalance());
+    BankAccount selectedAccount = selectAccount();
+    printBalance(selectedAccount);
+}
+
+    private void printBalance(BankAccount account) {
+        System.out.printf("Current account balance: $%.2f%n",account.getBalance());
     }
 
     public void viewTransactionHistory() {
@@ -214,6 +218,24 @@ public class MainMenu {
             selection = getUserSelection(EXIT_SELECTION);
             processInput(selection);
         } while (selection != EXIT_SELECTION);
+    }
+
+    private BankAccount selectAccount() {
+    int accountCount = customer.getNumberOfAccounts();
+
+    if (accountCount == 1) {
+        return customer.getAccount(0);
+    }
+
+    System.out.println("Select an account:");
+    displayAccounts();
+
+    int accountNumber = readSelection(
+        accountCount,
+        "Enter account number: "
+    );
+
+    return customer.getAccount(accountNumber - 1);
     }
 
     public static void main(String[] args) {
