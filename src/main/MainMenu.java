@@ -14,7 +14,7 @@ public class MainMenu {
 
     public MainMenu() {
         customer = new Customer();
-        userAccount = customer.getAccount(  0);
+        userAccount = customer.getAccount(0);
         otherAccount = new BankAccount();
         keyboardInput = new Scanner(System.in);
     }
@@ -159,8 +159,13 @@ public class MainMenu {
         }
 
         System.out.println("Transaction history:");
+        System.out.printf("%-14s %12s %14s%n", "Type", "Amount", "Balance");
         for (BankAccount.Transaction transaction : history) {
-            System.out.printf("Deposit: $%.2f%n", transaction.getAmount());
+            String sign = transaction.getType().isCredit() ? "+" : "-";
+            System.out.printf("%-14s %12s %14s%n",
+                transaction.getType().getLabel(),
+                String.format("%s$%.2f", sign, transaction.getAmount()),
+                String.format("$%.2f", transaction.getBalanceAfter()));
         }
     }
 

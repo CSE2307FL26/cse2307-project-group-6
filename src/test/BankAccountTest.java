@@ -2,86 +2,188 @@ package test;
 
 import main.BankAccount;
 import main.BankAccount.Transaction;
-import main.Customer;
+import main.BankAccount.TransactionType;
 
-import static org.junit.Assert.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 public class BankAccountTest {
 
     @Test
-    public void testNewCustomerHasOneAccount() {
-        Customer customer = new Customer();
-        assertEquals(1, customer.getNumberOfAccounts());
+    public void depositIsRecordedWithType() {
+        BankAccount account = new BankAccount();
+        account.deposit(50);
+
+        Transaction t = account.getTransactionHistory().get(0);
+        assertEquals(TransactionType.DEPOSIT, t.getType());
+        assertEquals(50, t.getAmount(), 0.01);
+        assertEquals(50, t.getBalanceAfter(), 0.01);
     }
 
     @Test
-    public void testOpenAccountAddsAccount() {
-        Customer customer = new Customer();
-        customer.openAccount();
-        assertEquals(2, customer.getNumberOfAccounts());
+    public void withdrawalIsRecordedInHistory() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.withdraw(30);
+
+        List<Transaction> history = account.getTransactionHistory();
+        assertEquals(2, history.size());
+        Transaction t = history.get(1);
+        assertEquals(TransactionType.WITHDRAWAL, t.getType());
+        assertEquals(30, t.getAmount(), 0.01);
+        assertEquals(-30, t.getSignedAmount(), 0.01);
+        assertEquals(70, t.getBalanceAfter(), 0.01);
     }
 
     @Test
-    public void testNewAccountStartsAtZero() {
-        Customer customer = new Customer();
-        BankAccount newAccount = customer.openAccount();
-        assertEquals(0, newAccount.getBalance(), 0.01);
+    public void feeIsRecordedInHistory() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        account.collectFee(5);
+
+        Transaction t = account.getTransactionHistory().get(1);
+        assertEquals(TransactionType.FEE, t.getType());
+        assertEquals(5, t.getAmount(), 0.01);
+        assertEquals(95, t.getBalanceAfter(), 0.01);
     }
 
     @Test
-    public void testNewAccountIsSeparate() {
-        Customer customer = new Customer();
-        BankAccount first = customer.getAccounts().get(0);
-        BankAccount second = customer.openAccount();
-        first.deposit(100);
-        assertNotSame(first, second);
-        assertEquals(0, second.getBalance(), 0.01);
-        assertTrue(customer.getAccounts().contains(second));
-    }
-    
+    public void interestIsRecordedInHistory() {
+        BankAccount account = new BankAccount();
+        account.deposit(1000);
+        account.addInterest(5);
 
-    @Test
-    public void testCloseAccountRemovesAccount() {
-        Customer customer = new Customer();
-        BankAccount second = customer.openAccount();
-        customer.closeAccount(1);
-        assertEquals(1, customer.getNumberOfAccounts());
-        assertFalse(customer.getAccounts().contains(second));
+        Transaction t = account.getTransactionHistory().get(1);
+        assertEquals(TransactionType.INTEREST, t.getType());
+        assertEquals(50, t.getAmount(), 0.01);
+        assertEquals(1050, t.getBalanceAfter(), 0.01);
     }
 
     @Test
-    public void testCloseAccountReturnsBalance() {
-        Customer customer = new Customer();
-        BankAccount second = customer.openAccount();
-        second.deposit(75);
-        assertEquals(75, customer.closeAccount(1), 0.01);
+    public void zeroInterestIsNotRecorded() {
+        BankAccount account = new BankAccount();
+        account.deposit(1000);
+        account.addInterest(0);
+        assertEquals(1, account.getTransactionHistory().size());
     }
 
     @Test
-    public void testCannotCloseOnlyAccount() {
-        Customer customer = new Customer();
-        assertThrows(IllegalStateException.class, () -> customer.closeAccount(0));
-        assertEquals(1, customer.getNumberOfAccounts());
+    public void interestOnEmptyAccountIsNotRecorded() {
+        BankAccount account = new BankAccount();
+        account.addInterest(5);
+        assertTrue(account.getTransactionHistory().isEmpty());
     }
 
     @Test
-    public void testCannotCloseNonexistentAccount() {
-        Customer customer = new Customer();
-        customer.openAccount();
-        assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(5));
-        assertThrows(IllegalArgumentException.class, () -> customer.closeAccount(-1));
+    public void transferIsRecordedOnBothAccounts() {
+        BankAccount sender = new BankAccount();
+        BankAccount receiver = new BankAccount();
+        sender.deposit(100);
+        sender.transfer(receiver, 40);
+
+        Transaction out = sender.getTransactionHistory().get(1);
+        assertEquals(TransactionType.TRANSFER_OUT, out.getType());
+        assertEquals(40, out.getAmount(), 0.01);
+        assertEquals(60, out.getBalanceAfter(), 0.01);
+
+        List<Transaction> receiverHistory = receiver.getTransactionHistory();
+        assertEquals(1, receiverHistory.size());
+        Transaction in = receiverHistory.get(0);
+        assertEquals(TransactionType.TRANSFER_IN, in.getType());
+        assertEquals(40, in.getAmount(), 0.01);
+        assertEquals(40, in.getBalanceAfter(), 0.01);
+    }
+
+    @Test
+    public void historyKeepsTransactionsInOrder() {
+        BankAccount account = new BankAccount();
+        BankAccount other = new BankAccount();
+        account.deposit(200);
+        account.withdraw(20);
+        account.transfer(other, 30);
+        account.collectFee(10);
+        account.addInterest(10);
+
+        List<Transaction> history = account.getTransactionHistory();
+        assertEquals(5, history.size());
+        assertEquals(TransactionType.DEPOSIT, history.get(0).getType());
+        assertEquals(TransactionType.WITHDRAWAL, history.get(1).getType());
+        assertEquals(TransactionType.TRANSFER_OUT, history.get(2).getType());
+        assertEquals(TransactionType.FEE, history.get(3).getType());
+        assertEquals(TransactionType.INTEREST, history.get(4).getType());
+        assertEquals(154, history.get(4).getBalanceAfter(), 0.01);
+    }
+
+    @Test
+    public void lastBalanceAfterMatchesCurrentBalance() {
+        BankAccount account = new BankAccount();
+        account.deposit(80);
+        account.withdraw(15.25);
+        account.collectFee(2.50);
+
+        List<Transaction> history = account.getTransactionHistory();
+        assertEquals(account.getBalance(),
+                history.get(history.size() - 1).getBalanceAfter(), 0.001);
+    }
+
+    @Test
+    public void creditAndDebitTypesAreLabeledCorrectly() {
+        assertTrue(TransactionType.DEPOSIT.isCredit());
+        assertTrue(TransactionType.TRANSFER_IN.isCredit());
+        assertTrue(TransactionType.INTEREST.isCredit());
+        assertFalse(TransactionType.WITHDRAWAL.isCredit());
+        assertFalse(TransactionType.TRANSFER_OUT.isCredit());
+        assertFalse(TransactionType.FEE.isCredit());
+    }
+
+    @Test
+    public void failedWithdrawalIsNotRecorded() {
+        BankAccount account = new BankAccount();
+        account.deposit(10);
+        assertThrows(IllegalArgumentException.class, () -> account.withdraw(50));
+        assertEquals(1, account.getTransactionHistory().size());
+    }
+
+    @Test
+    public void failedFeeIsNotRecorded() {
+        BankAccount account = new BankAccount();
+        account.deposit(10);
+        assertThrows(IllegalArgumentException.class, () -> account.collectFee(50));
+        assertEquals(1, account.getTransactionHistory().size());
+    }
+
+    @Test
+    public void failedTransferIsNotRecordedOnEitherAccount() {
+        BankAccount sender = new BankAccount();
+        BankAccount receiver = new BankAccount();
+        sender.deposit(10);
+        assertThrows(IllegalArgumentException.class, () -> sender.transfer(receiver, 50));
+        assertEquals(1, sender.getTransactionHistory().size());
+        assertTrue(receiver.getTransactionHistory().isEmpty());
+    }
+
+    @Test
+    public void failedInterestIsNotRecorded() {
+        BankAccount account = new BankAccount();
+        account.deposit(100);
+        assertThrows(IllegalArgumentException.class, () -> account.addInterest(-5));
+        assertEquals(1, account.getTransactionHistory().size());
+    }
+
+    @Test
+    public void historyCopyCannotModifyAccount() {
+        BankAccount account = new BankAccount();
+        account.deposit(10);
+        account.getTransactionHistory().clear();
+        assertEquals(1, account.getTransactionHistory().size());
     }
 
     @Test
