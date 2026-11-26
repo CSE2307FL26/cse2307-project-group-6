@@ -174,4 +174,34 @@ public class BankTest {
         BankAccount opened = bank.openAccount();
         assertTrue(bank.getAccounts().contains(opened));
     }
+
+    private static final String TEST_SSN = "123-45-6789";
+
+    @Test
+    public void testBankStoresSsn() {
+        Bank bank = new Bank(TEST_SSN);
+        assertEquals(TEST_SSN, bank.getSsn());
+        assertEquals("***-**-6789", bank.getMaskedSsn());
+    }
+
+    @Test
+    public void testOpenedAccountHasBankSsn() {
+        Bank bank = new Bank(TEST_SSN);
+        BankAccount opened = bank.openAccount();
+        assertEquals(TEST_SSN, opened.getSsn());
+    }
+
+    @Test
+    public void testGetAccountByNumber() {
+        Bank bank = new Bank(TEST_SSN);
+        BankAccount opened = bank.openAccount();
+        assertSame(opened, bank.getAccountByNumber(opened.getAccountNumber()));
+    }
+
+    @Test
+    public void testGetAccountByUnknownNumberThrows() {
+        Bank bank = new Bank(TEST_SSN);
+        assertThrows(IllegalArgumentException.class,
+                () -> bank.getAccountByNumber("00000000"));
+    }
 }

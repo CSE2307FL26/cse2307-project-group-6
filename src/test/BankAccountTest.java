@@ -6,6 +6,7 @@ import main.BankAccount.TransactionType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,6 +17,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 public class BankAccountTest {
+
+    private static final String TEST_SSN = "123-45-6789";
 
     @Test
     public void depositIsRecordedWithType() {
@@ -524,5 +527,56 @@ public class BankAccountTest {
             //balance should stay the same
             assertEquals(10, testAccount.getBalance(), 0.01);
         }
+    }
+
+    @Test
+    public void testNormalizeSsn() {
+        assertEquals("123-45-6789", BankAccount.normalizeSsn("123-45-6789"));
+        assertEquals("123-45-6789", BankAccount.normalizeSsn("123456789"));
+    }
+
+    @Test
+    public void testInvalidSsnFormatThrows() {
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("12-34"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("abc-de-fghi"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn(null));
+    }
+
+    @Test
+    public void testInvalidSsnNumbersThrow() {
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("000-45-6789"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("123-00-6789"));
+        assertThrows(IllegalArgumentException.class, () -> BankAccount.normalizeSsn("123-45-0000"));
+    }
+
+    @Test
+    public void testIsValidSsn() {
+        assertTrue(BankAccount.isValidSsn(TEST_SSN));
+        assertFalse(BankAccount.isValidSsn("abc"));
+    }
+
+    @Test
+    public void testMaskSsn() {
+        assertEquals("***-**-6789", BankAccount.maskSsn(TEST_SSN));
+    }
+
+    @Test
+    public void testAccountNumberIsEightDigits() {
+        BankAccount account = new BankAccount(TEST_SSN);
+        assertTrue(account.getAccountNumber().matches("\\d{8}"));
+    }
+
+    @Test
+    public void testAccountNumbersAreUnique() {
+        BankAccount first = new BankAccount(TEST_SSN);
+        BankAccount second = new BankAccount(TEST_SSN);
+        assertNotEquals(first.getAccountNumber(), second.getAccountNumber());
+    }
+
+    @Test
+    public void testAccountStoresSsn() {
+        BankAccount account = new BankAccount(TEST_SSN);
+        assertEquals(TEST_SSN, account.getSsn());
+        assertEquals("***-**-6789", account.getMaskedSsn());
     }
 }

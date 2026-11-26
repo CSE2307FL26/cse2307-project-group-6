@@ -11,8 +11,19 @@ public class MainMenu {
     private final Scanner keyboardInput;
 
     public MainMenu() {
-        bank = new Bank();
         keyboardInput = new Scanner(System.in);
+        bank = new Bank(readSsn());
+    }
+
+    private String readSsn() {
+        while (true) {
+            System.out.print("Enter your SSN (123-45-6789): ");
+            String input = keyboardInput.nextLine();
+            if (BankAccount.isValidSsn(input)) {
+                return input;
+            }
+            System.out.println("Invalid SSN. Please try again.");
+        }
     }
 
     public void displayOptions() {
@@ -162,8 +173,8 @@ public class MainMenu {
     }
 
     private void printBalance(BankAccount account) {
-        System.out.printf("Current account balance: $%.2f%n",
-                account.getBalance());
+        System.out.printf("Account #%s balance: $%.2f%n",
+                account.getAccountNumber(), account.getBalance());
     }
 
     public void viewTransactionHistory() {
@@ -187,10 +198,11 @@ public class MainMenu {
     }
 
     public void openNewAccount() {
-        bank.openAccount();
-        int accountCount = bank.getNumberOfAccounts();
-        System.out.printf("New account opened! This is account %d. You now have %d accounts.%n",
-                accountCount, accountCount);
+        BankAccount newAccount = bank.openAccount();
+        System.out.printf("New account opened! Account #%s (SSN %s)%n",
+                newAccount.getAccountNumber(), newAccount.getMaskedSsn());
+        System.out.printf("You now have %d accounts.%n",
+                bank.getNumberOfAccounts());
     }
 
     public void closeExistingAccount() {
@@ -223,8 +235,8 @@ public class MainMenu {
     private void displayAccounts() {
         for (int index = 0; index < bank.getNumberOfAccounts(); index++) {
             BankAccount account = bank.getAccount(index);
-            System.out.printf("%d. Balance: $%.2f%n",
-                    index + 1, account.getBalance());
+            System.out.printf("%d. Account #%s  Balance: $%.2f%n",
+                    index + 1, account.getAccountNumber(), account.getBalance());
         }
     }
 
