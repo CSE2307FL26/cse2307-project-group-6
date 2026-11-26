@@ -4,19 +4,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Customer {
+public class Bank {
 
     private final String ssn;
     private List<BankAccount> accounts;
 
-    public Customer(String ssn) {
+    public Bank() {
+        this.ssn = null;
+        this.accounts = new ArrayList<>();
+        this.accounts.add(new BankAccount());
+    }
+
+    public Bank(String ssn) {
         this.ssn = BankAccount.normalizeSsn(ssn);
         this.accounts = new ArrayList<>();
         this.accounts.add(new BankAccount(this.ssn));
     }
 
     public BankAccount openAccount() {
-        BankAccount newAccount = new BankAccount(ssn);
+        BankAccount newAccount = (ssn == null) ? new BankAccount() : new BankAccount(ssn);
         this.accounts.add(newAccount);
         return newAccount;
     }
@@ -25,7 +31,6 @@ public class Customer {
         if (accountIndex < 0 || accountIndex >= accounts.size()) {
             throw new IllegalArgumentException("Account does not exist.");
         }
-
         return accounts.get(accountIndex);
     }
 
@@ -56,12 +61,12 @@ public class Customer {
     public int getNumberOfAccounts() {
         return this.accounts.size();
     }
-    
+
     public String getSsn() {
         return ssn;
     }
-    
+
     public String getMaskedSsn() {
-        return BankAccount.maskSsn(ssn);
+        return ssn == null ? "none on file" : BankAccount.maskSsn(ssn);
     }
 }

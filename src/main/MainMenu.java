@@ -7,17 +7,12 @@ public class MainMenu {
 
     private static final int EXIT_SELECTION = 10;
 
-    private final Customer customer;
-    private final BankAccount otherAccount;
+    private final Bank bank;
     private final Scanner keyboardInput;
-    private BankAccount userAccount;
 
     public MainMenu() {
         keyboardInput = new Scanner(System.in);
-        customer = new Customer(readSsn());
-        userAccount = customer.getAccount(0);
-        otherAccount = new BankAccount();
-        
+        bank = new Bank(readSsn());
     }
 
     private String readSsn() {
@@ -95,75 +90,96 @@ public class MainMenu {
     }
 
     public void performDeposit() {
+        BankAccount account = selectAccount("Which account would you like to deposit into?");
         Double amount = readNumber("How much would you like to deposit: ");
         if (amount == null) return;
 
         try {
-            userAccount.deposit(amount);
-            displayBalance();
+            account.deposit(amount);
+            printBalance(account);
         } catch (IllegalArgumentException exception) {
             printFailure("Deposit", exception);
         }
     }
 
     public void performWithdraw() {
+        BankAccount account = selectAccount("Which account would you like to withdraw from?");
         Double amount = readNumber("How much would you like to withdraw: ");
         if (amount == null) return;
 
         try {
-            userAccount.withdraw(amount);
-            displayBalance();
+            account.withdraw(amount);
+            printBalance(account);
         } catch (IllegalArgumentException exception) {
             printFailure("Withdrawal", exception);
         }
     }
 
     public void performTransfer() {
+        if (bank.getNumberOfAccounts() < 2) {
+            System.out.println("You need at least two accounts to make a transfer.");
+            return;
+        }
+
+        BankAccount source = selectAccount("Which account would you like to transfer from?");
+        BankAccount destination = selectAccount("Which account would you like to transfer to?");
+        if (source == destination) {
+            System.out.println("Transfer failed: cannot transfer to the same account.");
+            return;
+        }
+
         Double amount = readNumber("How much would you like to transfer: ");
         if (amount == null) return;
 
         try {
-            userAccount.transfer(otherAccount, amount);
+            source.transfer(destination, amount);
             System.out.println("Transfer complete.");
         } catch (IllegalArgumentException exception) {
             printFailure("Transfer", exception);
         }
-        displayBalance();
-        System.out.printf("Other account balance: $%.2f%n",
-                otherAccount.getBalance());
+        System.out.printf("From account balance: $%.2f%n", source.getBalance());
+        System.out.printf("To account balance: $%.2f%n", destination.getBalance());
     }
 
     public void performCollectFee() {
+        BankAccount account = selectAccount("Which account should the fee be collected from?");
         Double amount = readNumber("Enter fee amount to collect: ");
         if (amount == null) return;
 
         try {
-            userAccount.collectFee(amount);
-            displayBalance();
+            account.collectFee(amount);
+            printBalance(account);
         } catch (IllegalArgumentException exception) {
             printFailure("Fee collection", exception);
         }
     }
 
     public void performAddInterest() {
+        BankAccount account = selectAccount("Which account should receive the interest payment?");
         Double interestRate = readNumber("Enter interest rate (%): ");
         if (interestRate == null) return;
 
         try {
-            userAccount.addInterest(interestRate);
-            displayBalance();
+            account.addInterest(interestRate);
+            printBalance(account);
         } catch (IllegalArgumentException exception) {
             printFailure("Interest payment", exception);
         }
     }
 
     public void displayBalance() {
+        BankAccount account = selectAccount("Which account's balance would you like to check?");
+        printBalance(account);
+    }
+
+    private void printBalance(BankAccount account) {
         System.out.printf("Account #%s balance: $%.2f%n",
-                userAccount.getAccountNumber(), userAccount.getBalance());
+                account.getAccountNumber(), account.getBalance());
     }
 
     public void viewTransactionHistory() {
-        List<BankAccount.Transaction> history = userAccount.getTransactionHistory();
+        BankAccount account = selectAccount("Which account's history would you like to view?");
+        List<BankAccount.Transaction> history = account.getTransactionHistory();
 
         if (history.isEmpty()) {
             System.out.println("No transactions yet.");
@@ -171,21 +187,26 @@ public class MainMenu {
         }
 
         System.out.println("Transaction history:");
+        System.out.printf("%-14s %12s %14s%n", "Type", "Amount", "Balance");
         for (BankAccount.Transaction transaction : history) {
-            System.out.printf("Deposit: $%.2f%n", transaction.getAmount());
+            String sign = transaction.getType().isCredit() ? "+" : "-";
+            System.out.printf("%-14s %12s %14s%n",
+                transaction.getType().getLabel(),
+                String.format("%s$%.2f", sign, transaction.getAmount()),
+                String.format("$%.2f", transaction.getBalanceAfter()));
         }
     }
 
     public void openNewAccount() {
-        BankAccount newAccount = customer.openAccount();
+        BankAccount newAccount = bank.openAccount();
         System.out.printf("New account opened! Account #%s (SSN %s)%n",
-            newAccount.getAccountNumber(), newAccount.getMaskedSsn());
+                newAccount.getAccountNumber(), newAccount.getMaskedSsn());
         System.out.printf("You now have %d accounts.%n",
-            customer.getNumberOfAccounts());
+                bank.getNumberOfAccounts());
     }
 
     public void closeExistingAccount() {
-        int accountCount = customer.getNumberOfAccounts();
+        int accountCount = bank.getNumberOfAccounts();
 
         if (accountCount == 1) {
             System.out.println("You cannot close your only account.");
@@ -194,14 +215,26 @@ public class MainMenu {
 
         displayAccounts();
         int accountNumber = readSelection(
-                accountCount, "Select which account to close (by list number): ");
+                accountCount, "Select the account number to close: ");
 
         closeSelectedAccount(accountNumber - 1);
     }
 
+    private BankAccount selectAccount(String prompt) {
+        int accountCount = bank.getNumberOfAccounts();
+        if (accountCount == 1) {
+            return bank.getAccount(0);
+        }
+
+        System.out.println(prompt);
+        displayAccounts();
+        int accountNumber = readSelection(accountCount, "Select an account number: ");
+        return bank.getAccount(accountNumber - 1);
+    }
+
     private void displayAccounts() {
-        for (int index = 0; index < customer.getNumberOfAccounts(); index++) {
-            BankAccount account = customer.getAccount(index);
+        for (int index = 0; index < bank.getNumberOfAccounts(); index++) {
+            BankAccount account = bank.getAccount(index);
             System.out.printf("%d. Account #%s  Balance: $%.2f%n",
                     index + 1, account.getAccountNumber(), account.getBalance());
         }
@@ -209,8 +242,7 @@ public class MainMenu {
 
     private void closeSelectedAccount(int accountIndex) {
         try {
-            double payout = customer.closeAccount(accountIndex);
-            userAccount = customer.getAccount(0);
+            double payout = bank.closeAccount(accountIndex);
             System.out.printf("Account closed. Payout: $%.2f%n", payout);
         } catch (IllegalArgumentException | IllegalStateException exception) {
             printFailure("Account closure", exception);

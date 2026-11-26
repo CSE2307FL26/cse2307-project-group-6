@@ -81,7 +81,7 @@ public class BankAccount {
         }
 
         balance += amount;
-        transactionHistory.add(new Transaction(amount));
+        recordTransaction(TransactionType.DEPOSIT, amount);
     }
 
     public void withdraw(double amount) {
@@ -89,6 +89,8 @@ public class BankAccount {
         validateSufficientFunds(amount);
 
         balance -= amount;
+        recordTransaction(TransactionType.WITHDRAWAL, amount);
+
     }
 
     public void addInterest(double interestRate) {
@@ -102,6 +104,10 @@ public class BankAccount {
         }
 
         balance += interestPayment;
+
+        if (interestPayment > 0) {
+            recordTransaction(TransactionType.INTEREST, interestPayment);
+        }
     }
 
     public void transfer(BankAccount destination, double amount) {
@@ -110,7 +116,12 @@ public class BankAccount {
         validateDestination(destination, amount);
 
         balance -= amount;
+        recordTransaction(TransactionType.TRANSFER_OUT, amount);
+
+
         destination.balance += amount;
+        destination.recordTransaction(TransactionType.TRANSFER_IN, amount);
+
     }
 
     public void collectFee(double feeAmount) {
@@ -118,6 +129,12 @@ public class BankAccount {
         validateSufficientFunds(feeAmount);
 
         balance -= feeAmount;
+        recordTransaction(TransactionType.FEE, feeAmount);
+
+    }
+
+    private void recordTransaction(TransactionType type, double amount) {
+        transactionHistory.add(new Transaction(type, amount, balance));
     }
 
     private void validatePositiveAmount(double amount) {
@@ -177,16 +194,57 @@ public class BankAccount {
         return new ArrayList<>(transactionHistory);
     }
 
+    public enum TransactionType {
+        DEPOSIT("Deposit", true),
+        WITHDRAWAL("Withdrawal", false),
+        TRANSFER_IN("Transfer in", true),
+        TRANSFER_OUT("Transfer out", false),
+        FEE("Fee", false),
+        INTEREST("Interest", true);
+
+        private final String label;
+        private final boolean credit;
+
+        TransactionType(String label, boolean credit) {
+            this.label = label;
+            this.credit = credit;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public boolean isCredit() {
+            return credit;
+        }
+    }
+
     public static class Transaction {
 
+        private final TransactionType type;
         private final double amount;
+        private final double balanceAfter;
 
-        public Transaction(double amount) {
+        public Transaction(TransactionType type, double amount, double balanceAfter) {
+            this.type = type;
             this.amount = amount;
+            this.balanceAfter = balanceAfter;
+        }
+
+        public TransactionType getType() {
+            return type;
         }
 
         public double getAmount() {
             return amount;
+        }
+
+        public double getSignedAmount() {
+            return type.isCredit() ? amount : -amount;
+        }
+
+        public double getBalanceAfter() {
+            return balanceAfter;
         }
     }
 }
