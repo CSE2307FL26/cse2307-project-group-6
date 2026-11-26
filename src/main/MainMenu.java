@@ -6,6 +6,7 @@ import java.util.Scanner;
 public class MainMenu {
 
     private static final int EXIT_SELECTION = 10;
+    private static final String SAMPLE_CUSTOMER_SSN = "234-56-7890";
 
     private final Bank bank;
     private final Scanner keyboardInput;
@@ -13,6 +14,9 @@ public class MainMenu {
     public MainMenu() {
         keyboardInput = new Scanner(System.in);
         bank = new Bank(readSsn());
+        BankAccount sampleAccount = bank.openAccountForOtherCustomer(SAMPLE_CUSTOMER_SSN);
+        System.out.printf("(Sample customer account for testing transfers: #%s)%n",
+                sampleAccount.getAccountNumber());
     }
 
     private String readSsn() {
@@ -116,6 +120,19 @@ public class MainMenu {
     }
 
     public void performTransfer() {
+        System.out.println("Where would you like to transfer to?");
+        System.out.println("1. Another one of your accounts");
+        System.out.println("2. Someone else's account");
+        int choice = readSelection(2, "Please make a selection: ");
+
+        if (choice == 1) {
+            transferBetweenOwnAccounts();
+        } else {
+            transferToSomeoneElse();
+        }
+    }
+
+    private void transferBetweenOwnAccounts() {
         if (bank.getNumberOfAccounts() < 2) {
             System.out.println("You need at least two accounts to make a transfer.");
             return;
@@ -139,6 +156,23 @@ public class MainMenu {
         }
         System.out.printf("From account balance: $%.2f%n", source.getBalance());
         System.out.printf("To account balance: $%.2f%n", destination.getBalance());
+    }
+
+    private void transferToSomeoneElse() {
+        BankAccount source = selectAccount("Which account would you like to transfer from?");
+        System.out.print("Enter the recipient's account number: ");
+        String destinationNumber = keyboardInput.nextLine().trim();
+
+        Double amount = readNumber("How much would you like to transfer: ");
+        if (amount == null) return;
+
+        try {
+            bank.transferToAccountNumber(source, destinationNumber, amount);
+            System.out.printf("Transfer to account #%s complete.%n", destinationNumber);
+        } catch (IllegalArgumentException exception) {
+            printFailure("Transfer", exception);
+        }
+        printBalance(source);
     }
 
     public void performCollectFee() {
